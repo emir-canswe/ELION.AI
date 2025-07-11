@@ -1,33 +1,34 @@
-from gtts import gTTS
-import speech_recognition as sr
-import random
-import os
-import pygame
-from selenium import webdriver
+from gtts import gTTS  # Metni sese çevirme
+import speech_recognition as sr  # Mikrofonla ses tanıma
+import random  # Rastgele seçimler için
+import os  # Dosya işlemleri
+import pygame  # mp3 çalmak için
+from selenium import webdriver  # Web tarayıcı kontrolü (otomasyon)
 from selenium.webdriver.common.by import By
-import time
-import pyodbc
-from datetime import datetime
+import time  # Bekleme işlemleri
+import pyodbc  # SQL Server veritabanı bağlantısı
+from datetime import datetime  # Tarih ve saat işlemleri
 
-r = sr.Recognizer()
+r = sr.Recognizer()  # Ses tanıma için tanıyıcı nesne
 
-tepki1 = ["merhaba", "merhaba alion", "alion", "hey alion"]
-tepki2 = ["nasılsın alion", "bugün nasılsın", "keyifler nasıl kral", "ne haber lan", "nasılsın"]
-tepki3 = ["youtube bağlan", "bana şarkı aç", "şarkı aç", "youtube", "alion bana bir şarkı aç hele", "alion şarkı aç"]
-tepki4 = ["alion googleye bağlan", "acil googleye bağlan", "googleyi aç", "internete bağlan", "arama yap"]
-kitap_komutlari = ["alion bana kitap öner", "kitap öner", "bana bir kitap öner", "kitap tavsiye et"]
-yeniden_kitap = ["başka öner", "tekrar", "beğenmedim", "yenisini öner"]
-film_komutlari = ["alion bana film öner", "film öner", "bana bir film öner", "film tavsiye et"]
-yeniden_film = ["başka öner", "tekrar", "beğenmedim", "yenisini öner"]
-hatirlatma_komutlari = ["hatırlat", "hatırlatma ekle", "bir şey hatırlat", "bana hatırlatma kur"]
-gunluk_komutlari = ["günlük yaz", "günlüğe not ekle", "bugünkü notum", "günlük"]
+# Belirli sesli komutlara karşılık verilecek tetikleyici cümleler
+thepki1 = ["merhaba", "merhaba alion", "alion", "hey alion"]  # Selamlaşma
+tepki2 = ["nasılsın alion", "bugün nasılsın", "keyifler nasıl kral", "ne haber lan", "nasılsın"]  # Hal hatır sorma
+tepki3 = ["youtube bağlan", "bana şarkı aç", "şarkı aç", "youtube", "alion bana bir şarkı aç hele", "alion şarkı aç"]  # YouTube bağlantısı
+tepki4 = ["alion googleye bağlan", "acil googleye bağlan", "googleyi aç", "internete bağlan", "arama yap"]  # Google arama
+kitap_komutlari = ["alion bana kitap öner", "kitap öner", "bana bir kitap öner", "kitap tavsiye et"]  # Kitap önerisi
+yeniden_kitap = ["başka öner", "tekrar", "beğenmedim", "yenisini öner"]  # Yeni kitap önerisi
+film_komutlari = ["alion bana film öner", "film öner", "bana bir film öner", "film tavsiye et"]  # Film önerisi
+yeniden_film = ["başka öner", "tekrar", "beğenmedim", "yenisini öner"]  # Yeni film önerisi
+hatirlatma_komutlari = ["hatırlat", "hatırlatma ekle", "bir şey hatırlat", "bana hatırlatma kur"]  # Hatırlatma ekle
+gunluk_komutlari = ["günlük yaz", "günlüğe not ekle", "bugünkü notum", "günlük"]  # Günlük ekleme
 
 class SesliAsistan:
     def __init__(self):
-        pygame.mixer.init()
-        self.veritabani_baglantisi()
+        pygame.mixer.init()  # Ses sistemini başlat
+        self.veritabani_baglantisi()  # Veritabanı bağlantısını yap
 
-    def veritabani_baglantisi(self):
+    def veritabani_baglantisi(self):  # SQL Server veritabanına bağlan
         try:
             self.conn = pyodbc.connect(
                 'Driver={SQL Server};'
@@ -35,34 +36,34 @@ class SesliAsistan:
                 'Database=alion;'
                 'Trusted_Connection=yes;'
             )
-            self.cursor = self.conn.cursor()
+            self.cursor = self.conn.cursor()  # SQL işlemleri için imleç oluştur
         except Exception as e:
             print("Veritabanı bağlantı hatası:", e)
 
-    def seslendirme(self, metin):
-        dosya = str(random.randint(0, 1000000000)) + ".mp3"
+    def seslendirme(self, metin):  # Metni seslendir
+        dosya = str(random.randint(0, 1000000000)) + ".mp3"  # Geçici mp3 dosya adı oluştur
         try:
-            ses = gTTS(text=metin, lang="tr", slow=False)
-            ses.save(dosya)
-            pygame.mixer.music.load(dosya)
-            pygame.mixer.music.play()
+            ses = gTTS(text=metin, lang="tr", slow=False)  # gTTS ile metni sese çevir
+            ses.save(dosya)  # mp3 olarak kaydet
+            pygame.mixer.music.load(dosya)  # mp3 dosyasını yükle
+            pygame.mixer.music.play()  # mp3 dosyasını çal
             while pygame.mixer.music.get_busy():
-                continue
-            pygame.mixer.music.unload()
+                continue  # Müzik bitene kadar bekle
+            pygame.mixer.music.unload()  # Müzik çalmayı durdur
         except Exception as e:
             print("Seslendirme hatası:", e)
         finally:
             if os.path.exists(dosya):
-                os.remove(dosya)
+                os.remove(dosya)  # Geçici mp3 dosyasını sil
 
-    def mikrofon(self):
+    def mikrofon(self):  # Kullanıcıdan sesli komut al
         with sr.Microphone() as kaynak:
-            r.adjust_for_ambient_noise(kaynak, duration=1)
+            r.adjust_for_ambient_noise(kaynak, duration=1)  # Ortam sesine göre ayarlama
             print("Seni dinliyorum...")
-            ses = r.listen(kaynak)
+            ses = r.listen(kaynak)  # Kullanıcıdan sesi al
             try:
-                metin = r.recognize_google(ses, language="tr-TR")
-                return metin.lower()
+                metin = r.recognize_google(ses, language="tr-TR")  # Google ile ses tanıma
+                return metin.lower()  # Küçük harfe çevir
             except sr.UnknownValueError:
                 self.seslendirme("Ne dediğini anlayamadım.")
                 return ""
@@ -70,23 +71,23 @@ class SesliAsistan:
                 self.seslendirme("Ses tanıma servisine ulaşılamıyor.")
                 return ""
 
-    def kitap_oner(self):
+    def kitap_oner(self):  # Rastgele kitap öner
         while True:
             self.cursor.execute("SELECT * FROM kitap")
             kitaplar = self.cursor.fetchall()
             if kitaplar:
-                secilen = random.choice(kitaplar)
+                secilen = random.choice(kitaplar)  # Rastgele kitap seç
                 kitap_ad = secilen[1] if len(secilen) > 1 else "Bilinmeyen Kitap"
                 self.seslendirme(f"Sana önerim: {kitap_ad}")
                 print("Önerilen Kitap:", kitap_ad)
                 cevap = self.mikrofon()
                 if cevap not in yeniden_kitap:
-                    break
+                    break  # Kullanıcı başka kitap istemiyorsa çık
             else:
                 self.seslendirme("Veritabanında kitap bulunamadı.")
                 break
 
-    def film_oner(self):
+    def film_oner(self):  # Rastgele film öner
         while True:
             self.cursor.execute("SELECT * FROM filmler")
             filmler = self.cursor.fetchall()
@@ -102,7 +103,7 @@ class SesliAsistan:
                 self.seslendirme("Veritabanında film bulunamadı.")
                 break
 
-    def hatirlatma_ekle(self):
+    def hatirlatma_ekle(self):  # Hatırlatma ekle
         self.seslendirme("Ne hatırlatmamı istersin?")
         metin = self.mikrofon()
         self.seslendirme("Ne zaman hatırlatayım? Örnek: 2025-05-08 14:30")
@@ -115,7 +116,7 @@ class SesliAsistan:
         except:
             self.seslendirme("Tarihi anlayamadım. Lütfen formatı doğru gir.")
 
-    def hatirlatmalari_kontrol_et(self):
+    def hatirlatmalari_kontrol_et(self):  # Süresi gelen hatırlatmaları seslendir
         now = datetime.now()
         self.cursor.execute("SELECT * FROM hatirlatmalar WHERE tarih_saat <= ?", now)
         hatirlatmalar = self.cursor.fetchall()
@@ -124,7 +125,7 @@ class SesliAsistan:
             self.cursor.execute("DELETE FROM hatirlatmalar WHERE id = ?", h[0])
             self.conn.commit()
 
-    def gunluk_ekle(self):
+    def gunluk_ekle(self):  # Günlük ekle
         self.seslendirme("Bugünkü günlüğünü söyle.")
         metin = self.mikrofon()
         tarih = datetime.now().date()
@@ -132,7 +133,7 @@ class SesliAsistan:
         self.conn.commit()
         self.seslendirme("Günlük kaydedildi.")
 
-    def ses_karsilikli(self, gelen_Ses):
+    def ses_karsilikli(self, gelen_Ses):  # Sesli komutlara karşılık ver
         if gelen_Ses in tepki1:
             self.seslendirme("Merhaba efendim, hoş geldin!")
 
@@ -176,8 +177,8 @@ class SesliAsistan:
 asistan = SesliAsistan()
 
 while True:
-    asistan.hatirlatmalari_kontrol_et()
-    gelen_Ses = asistan.mikrofon()
+    asistan.hatirlatmalari_kontrol_et()  # Hatırlatma zamanı gelenleri kontrol et
+    gelen_Ses = asistan.mikrofon()  # Kullanıcıdan ses al
     if gelen_Ses:
         print(f"Kullanıcı: {gelen_Ses}")
-        asistan.ses_karsilikli(gelen_Ses)
+        asistan.ses_karsilikli(gelen_Ses)  # Komuta göre işlem yap
