@@ -11,10 +11,10 @@ import time  # Bekleme işlemleri için
 r = sr.Recognizer()
 
 # **Kullanıcının verebileceği bazı sesli komutlar**
-tepki1 = ["merhaba", "merhaba epsema", "epsema", "hey epsema"]  # Selam komutları
-tepki2 = ["nasılsın epsema", "bugün nasılsın", "keyifler nasıl kral", "ne haber lan", "nasılsın"]  # Hal hatır sorma
-tepki3 = ["youtube bağlan", "bana şarkı aç", "şarkı aç", "youtube", "epsema bana bir şarkı aç hele", "epsema şarkı aç"]  # YouTube komutları
-tepki4 = ["epsema googleye bağlan", "acil googleye bağlan", "googleyi aç", "internete bağlan", "arama yap"]  # Google arama komutları
+tepki1 = ["merhaba", "merhaba elion", "elion", "hey elion"]  # Selam komutları
+tepki2 = ["nasılsın elion", "bugün nasılsın", "keyifler nasıl kral", "ne haber lan", "nasılsın"]  # Hal hatır sorma
+tepki3 = ["youtube bağlan", "bana şarkı aç", "şarkı aç", "youtube", "elion bana bir şarkı aç hele", "elion şarkı aç"]  # YouTube komutları
+tepki4 = ["elion googleye bağlan", "acil googleye bağlan", "googleyi aç", "internete bağlan", "arama yap"]  # Google arama komutları
 
 
 # **Sesli Asistan Sınıfı**
