@@ -1,0 +1,26 @@
+{
+  "name": "elion-ai",
+  "version": "1.0.0",
+  "description": "Elion Kişisel AI Asistan",
+  "main": "main.js",
+  "author": "emir-canswe",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder build --win"
+  },
+  "build": {
+    "appId": "com.elion.ai",
+    "productName": "Elion AI",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 function Filmler() {
     const [filmler, setFilmler] = useState([]);
@@ -11,14 +12,14 @@ function Filmler() {
     }, []);
 
     const filmleriGetir = () => {
-        axios.get("http://localhost:8000/filmler")
+        axios.get(`${API_BASE}/filmler`)
             .then(r => setFilmler(r.data))
             .catch(e => console.error(e));
     };
 
     const filmEkle = () => {
         if (!yeniFilm.trim()) return;
-        axios.post("http://localhost:8000/filmler", { ad: yeniFilm })
+        axios.post(`${API_BASE}/filmler`, { ad: yeniFilm })
             .then(() => {
                 setYeniFilm("");
                 filmleriGetir();
@@ -26,7 +27,7 @@ function Filmler() {
     };
 
     const rastgeleOner = () => {
-        axios.get("http://localhost:8000/filmler/rastgele")
+        axios.get(`${API_BASE}/filmler/rastgele`)
             .then(r => setOneri(r.data))
             .catch(() => setOneri({ ad: "Film bulunamadı" }));
     };

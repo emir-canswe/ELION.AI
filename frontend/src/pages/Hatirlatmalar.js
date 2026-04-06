@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 function Hatirlatmalar() {
     const [hatirlatmalar, setHatirlatmalar] = useState([]);
@@ -11,7 +12,7 @@ function Hatirlatmalar() {
     }, []);
 
     const hatirlatmalariGetir = () => {
-        axios.get("http://localhost:8000/hatirlatmalar")
+        axios.get(`${API_BASE}/hatirlatmalar`)
             .then(r => setHatirlatmalar(r.data))
             .catch(e => console.error(e));
     };
@@ -19,7 +20,7 @@ function Hatirlatmalar() {
     const hatirlatmaEkle = () => {
         if (!metin.trim() || !tarih) return;
         const tarihDuzenlenmis = tarih.replace("T", " ").slice(0, 16);
-        axios.post("http://localhost:8000/hatirlatmalar", {
+        axios.post(`${API_BASE}/hatirlatmalar`, {
             metin,
             tarih_saat: tarihDuzenlenmis
         }).then(() => {
@@ -30,7 +31,7 @@ function Hatirlatmalar() {
     };
 
     const hatirlatmaSil = (id) => {
-        axios.delete(`http://localhost:8000/hatirlatmalar/${id}`)
+        axios.delete(`${API_BASE}/hatirlatmalar/${id}`)
             .then(() => hatirlatmalariGetir());
     };
 

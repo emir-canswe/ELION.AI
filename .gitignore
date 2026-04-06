@@ -1,8 +1,29 @@
+# Python
 backend/venv/
-frontend/node_modules/
-whatsapp-service/node_modules/
-whatsapp-service/.wwebjs_auth/
-whatsapp-service/.wwebjs_cache/
 backend/.env
 *.pyc
 __pycache__/
+
+# Node
+frontend/node_modules/
+frontend/build/
+electron-app/node_modules/
+electron-app/dist/
+electron-app/out/
+whatsapp-service/node_modules/
+
+# WhatsApp Web.js oturum
+whatsapp-service/.wwebjs_auth/
+whatsapp-service/.wwebjs_cache/
+
+# Ortam (CRA)
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

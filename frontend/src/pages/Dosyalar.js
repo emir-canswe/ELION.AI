@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 function Dosyalar() {
     const [mevcutYol, setMevcutYol] = useState("");
@@ -9,7 +10,7 @@ function Dosyalar() {
 
     const kokDizinleriGetir = () => {
         setYukluyor(true);
-        axios.get("http://localhost:8000/dosyalar")
+        axios.get(`${API_BASE}/dosyalar`)
             .then(r => {
                 setDizinler(r.data.dizinler.map(d => ({ ad: d, yol: d })));
                 setDosyalar([]);
@@ -20,7 +21,7 @@ function Dosyalar() {
 
     const dizinAc = (yol) => {
         setYukluyor(true);
-        axios.post("http://localhost:8000/dosyalar", { yol })
+        axios.post(`${API_BASE}/dosyalar`, { yol })
             .then(r => {
                 setDizinler(r.data.dizinler);
                 setDosyalar(r.data.dosyalar);
@@ -31,7 +32,7 @@ function Dosyalar() {
     };
 
     const dosyaAc = (yol) => {
-        axios.post("http://localhost:8000/dosya-ac", { yol })
+        axios.post(`${API_BASE}/dosya-ac`, { yol })
             .then(() => alert("Dosya açıldı!"))
             .catch(e => alert("Hata: " + e.message));
     };

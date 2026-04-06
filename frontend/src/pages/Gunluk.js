@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 function Gunluk() {
     const [gunlukler, setGunlukler] = useState([]);
@@ -10,14 +11,14 @@ function Gunluk() {
     }, []);
 
     const gunlukleriGetir = () => {
-        axios.get("http://localhost:8000/gunluk")
+        axios.get(`${API_BASE}/gunluk`)
             .then(r => setGunlukler(r.data))
             .catch(e => console.error(e));
     };
 
     const gunlukEkle = () => {
         if (!metin.trim()) return;
-        axios.post("http://localhost:8000/gunluk", { metin })
+        axios.post(`${API_BASE}/gunluk`, { metin })
             .then(() => {
                 setMetin("");
                 gunlukleriGetir();

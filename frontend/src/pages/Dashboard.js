@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import Fuse from "fuse.js";
+import { API_BASE } from "../api";
 
 const KOMUTLAR = {
     selamlama: ["merhaba", "merhaba elion", "hey elion", "selam", "hey", "selam elion", "günaydın", "günaydın elion", "iyi günler", "iyi akşamlar"],
@@ -22,6 +24,22 @@ const KOMUTLAR = {
     yardim: ["yardım et", "ne yapabilirsin", "komutlar neler", "neler yapabilirsin", "yardım"],
     sans: ["şansımı dene", "rastgele bir şey söyle", "beni şaşırt"],
 };
+
+const tumKomutlar = Object.entries(KOMUTLAR).flatMap(([kategori, kelimeler]) =>
+    kelimeler.map(kelime => ({ kategori, kelime }))
+);
+
+const fuse = new Fuse(tumKomutlar, {
+    keys: ["kelime"],
+    threshold: 0.4,
+    distance: 100,
+});
+
+function komutBul(ses) {
+    const sonuc = fuse.search(ses);
+    if (sonuc.length > 0) return sonuc[0].item.kategori;
+    return null;
+}
 
 const rastgele = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -101,7 +119,30 @@ export default function Dashboard() {
             setMod(null); return;
         }
 
-        if (KOMUTLAR.selamlama.some(k => ses.includes(k))) {
+        // Önce tam eşleşme kontrol et, sonra fuzzy
+        const kategori =
+            KOMUTLAR.selamlama.some(k => ses.includes(k)) ? "selamlama" :
+                KOMUTLAR.nasilsin.some(k => ses.includes(k)) ? "nasilsin" :
+                    KOMUTLAR.tesekkur.some(k => ses.includes(k)) ? "tesekkur" :
+                        KOMUTLAR.ovme.some(k => ses.includes(k)) ? "ovme" :
+                            KOMUTLAR.sikayet.some(k => ses.includes(k)) ? "sikayet" :
+                                KOMUTLAR.saat.some(k => ses.includes(k)) ? "saat" :
+                                    KOMUTLAR.tarih.some(k => ses.includes(k)) ? "tarih" :
+                                        KOMUTLAR.hava.some(k => ses.includes(k)) ? "hava" :
+                                            KOMUTLAR.yardim.some(k => ses.includes(k)) ? "yardim" :
+                                                KOMUTLAR.sans.some(k => ses.includes(k)) ? "sans" :
+                                                    KOMUTLAR.kitap.some(k => ses.includes(k)) ? "kitap" :
+                                                        KOMUTLAR.film.some(k => ses.includes(k)) ? "film" :
+                                                            KOMUTLAR.youtube.some(k => ses.includes(k)) ? "youtube" :
+                                                                KOMUTLAR.google.some(k => ses.includes(k)) ? "google" :
+                                                                    KOMUTLAR.hatirlatma.some(k => ses.includes(k)) ? "hatirlatma" :
+                                                                        KOMUTLAR.whatsapp.some(k => ses.includes(k)) ? "whatsapp" :
+                                                                            KOMUTLAR.gunluk.some(k => ses.includes(k)) ? "gunluk" :
+                                                                                KOMUTLAR.dosya.some(k => ses.includes(k)) ? "dosya" :
+                                                                                    KOMUTLAR.durdur.some(k => ses.includes(k)) ? "durdur" :
+                                                                                        komutBul(ses); // Tam eşleşme yoksa fuzzy dene
+
+        if (kategori === "selamlama") {
             const cevap = rastgele([
                 "Merhaba efendim! Sizi görmek ne güzel, nasıl yardımcı olabilirim?",
                 "Hoş geldiniz efendim! Elion her zaman hizmetinizde, buyrun!",
@@ -116,7 +157,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.nasilsin.some(k => ses.includes(k))) {
+        } else if (kategori === "nasilsin") {
             const cevap = rastgele([
                 "İyiyim efendim, teşekkürler! Bugün size nasıl yardımcı olabilirim?",
                 "Gayet iyiyim efendim! Sizi görmek güzel oldu, ne yapabilirim?",
@@ -131,7 +172,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.tesekkur.some(k => ses.includes(k))) {
+        } else if (kategori === "tesekkur") {
             const cevap = rastgele([
                 "Rica ederim efendim!",
                 "Her zaman efendim!",
@@ -146,7 +187,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.ovme.some(k => ses.includes(k))) {
+        } else if (kategori === "ovme") {
             const cevap = rastgele([
                 "Teşekkürler efendim, bu beni mutlu etti!",
                 "Çok naziksiniz efendim!",
@@ -161,7 +202,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.sikayet.some(k => ses.includes(k))) {
+        } else if (kategori === "sikayet") {
             const cevap = rastgele([
                 "Özür dilerim efendim, daha iyi olmaya çalışacağım!",
                 "Haklısınız efendim, kendimi geliştireceğim!",
@@ -169,7 +210,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.saat.some(k => ses.includes(k))) {
+        } else if (kategori === "saat") {
             const saat = new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
             const cevap = rastgele([
                 `Saat şu an ${saat} efendim.`,
@@ -178,7 +219,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.tarih.some(k => ses.includes(k))) {
+        } else if (kategori === "tarih") {
             const tarih = new Date().toLocaleDateString("tr-TR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
             const cevap = rastgele([
                 `Bugün ${tarih} efendim.`,
@@ -187,7 +228,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.hava.some(k => ses.includes(k))) {
+        } else if (kategori === "hava") {
             const cevap = rastgele([
                 "Hava durumu için konumunuza erişimim yok efendim, tarayıcıdan kontrol edebilirsiniz.",
                 "Maalesef hava durumuna bakamıyorum efendim, bir hava sitesi açayım mı?",
@@ -195,7 +236,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.yardim.some(k => ses.includes(k))) {
+        } else if (kategori === "yardim") {
             const cevap = rastgele([
                 "Size film, kitap önerebilir, hatırlatma ekleyebilir, günlük yazabilir, YouTube ve Google açabilirim!",
                 "Komutlarım: film öner, kitap öner, hatırlatma ekle, günlük yaz, YouTube aç, mesaj gönder!",
@@ -210,7 +251,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.sans.some(k => ses.includes(k))) {
+        } else if (kategori === "sans") {
             const cevap = rastgele([
                 "Bugün harika bir gün olacak efendim, inanın bana!",
                 "Bir fincan kahve içmeyi düşünüyor musunuz? Çok iyi gelir!",
@@ -225,9 +266,9 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.kitap.some(k => ses.includes(k))) {
+        } else if (kategori === "kitap") {
             try {
-                const r = await axios.get("http://localhost:8000/kitaplar/rastgele");
+                const r = await axios.get(`${API_BASE}/kitaplar/rastgele`);
                 const cevap = rastgele([
                     `Size önerim: ${r.data.ad}. Harika bir kitap efendim!`,
                     `${r.data.ad} okuyabilirsiniz efendim, çok beğenebilirsiniz!`,
@@ -240,9 +281,9 @@ export default function Dashboard() {
                 logEkle("🤖 Elion", "Kitap bulunamadı.");
             }
 
-        } else if (KOMUTLAR.film.some(k => ses.includes(k))) {
+        } else if (kategori === "film") {
             try {
-                const r = await axios.get("http://localhost:8000/filmler/rastgele");
+                const r = await axios.get(`${API_BASE}/filmler/rastgele`);
                 const cevap = `Size önerim: ${r.data.ad}. İzlemek ister misiniz? Evet deyin.`;
                 konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
                 setGeciciVeri(v => ({ ...v, filmAd: r.data.ad }));
@@ -252,7 +293,7 @@ export default function Dashboard() {
                 logEkle("🤖 Elion", "Film bulunamadı.");
             }
 
-        } else if (KOMUTLAR.youtube.some(k => ses.includes(k))) {
+        } else if (kategori === "youtube") {
             const cevap = rastgele([
                 "Hangi şarkıyı açmamı istersiniz efendim?",
                 "YouTube için ne arayayım efendim?",
@@ -261,7 +302,7 @@ export default function Dashboard() {
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             setMod("youtube");
 
-        } else if (KOMUTLAR.google.some(k => ses.includes(k))) {
+        } else if (kategori === "google") {
             const cevap = rastgele([
                 "Ne aramamı istersiniz efendim?",
                 "Google'da ne arayalım efendim?",
@@ -270,7 +311,7 @@ export default function Dashboard() {
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             setMod("google");
 
-        } else if (KOMUTLAR.hatirlatma.some(k => ses.includes(k))) {
+        } else if (kategori === "hatirlatma") {
             const cevap = rastgele([
                 "Ne hatırlatmamı istersiniz efendim?",
                 "Tabii efendim, ne için hatırlatma kurayım?",
@@ -279,7 +320,7 @@ export default function Dashboard() {
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             setMod("hatirlatma"); setAltAdim("metin");
 
-        } else if (KOMUTLAR.whatsapp.some(k => ses.includes(k))) {
+        } else if (kategori === "whatsapp") {
             const cevap = rastgele([
                 "Kimin numarasına mesaj göndereyim efendim?",
                 "Tabii efendim, numarayı söyleyin göndereyim.",
@@ -288,7 +329,7 @@ export default function Dashboard() {
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             setMod("whatsapp"); setAltAdim("numara");
 
-        } else if (KOMUTLAR.gunluk.some(k => ses.includes(k))) {
+        } else if (kategori === "gunluk") {
             const cevap = rastgele([
                 "Günlüğünüzü dinliyorum efendim, buyrun.",
                 "Sizi dinliyorum efendim, günlüğünüzü yazın.",
@@ -297,7 +338,7 @@ export default function Dashboard() {
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             setMod("gunluk");
 
-        } else if (KOMUTLAR.dosya.some(k => ses.includes(k))) {
+        } else if (kategori === "dosya") {
             const cevap = rastgele([
                 "Dosya gezginini açıyorum efendim.",
                 "Hemen dosyalara bakıyorum efendim.",
@@ -305,7 +346,7 @@ export default function Dashboard() {
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
 
-        } else if (KOMUTLAR.durdur.some(k => ses.includes(k))) {
+        } else if (kategori === "durdur") {
             const cevap = rastgele([
                 "Görüşürüz efendim, kendinize iyi bakın!",
                 "Hoşça kalın efendim, dilediğinizde buradayım!",
@@ -341,7 +382,7 @@ export default function Dashboard() {
             setAltAdim("tarih");
         } else if (altAdim === "tarih") {
             try {
-                await axios.post("http://localhost:8000/hatirlatmalar", { metin: geciciVeri.metin, tarih_saat: ses });
+                await axios.post(`${API_BASE}/hatirlatmalar`, { metin: geciciVeri.metin, tarih_saat: ses });
                 const cevap = rastgele(["Hatırlatma kaydedildi efendim!", "Tamam efendim, hatırlatmayı kurdum!", "Kaydettim efendim, sizi hatırlatırım!"]);
                 konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             } catch {
@@ -360,7 +401,7 @@ export default function Dashboard() {
             setAltAdim("mesaj");
         } else if (altAdim === "mesaj") {
             try {
-                await axios.post("http://localhost:8000/whatsapp/mesaj-gonder", { numara: geciciVeri.numara, mesaj: ses });
+                await axios.post(`${API_BASE}/whatsapp/mesaj-gonder`, { numara: geciciVeri.numara, mesaj: ses });
                 const cevap = rastgele(["Mesaj gönderildi efendim!", "Tamam efendim, mesajınız iletildi!", "Mesajınız gönderildi efendim, başka bir isteğiniz?"]);
                 konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
             } catch {
@@ -373,7 +414,7 @@ export default function Dashboard() {
 
     const gunlukAdim = async (ses) => {
         try {
-            await axios.post("http://localhost:8000/gunluk", { metin: ses });
+            await axios.post(`${API_BASE}/gunluk`, { metin: ses });
             const cevap = rastgele(["Günlüğünüz kaydedildi efendim!", "Yazdım efendim, günlüğünüz hazır!", "Kaydettim efendim, güzel bir gün geçirin!"]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
         } catch {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
-const API = "http://localhost:8000";
+import { API_BASE } from "../api";
 
 function Kitaplar() {
     const [kitaplar, setKitaplar] = useState([]);
@@ -11,19 +10,19 @@ function Kitaplar() {
     useEffect(() => { kitaplariGetir(); }, []);
 
     const kitaplariGetir = () => {
-        axios.get(`${API}/kitaplar`)
+        axios.get(`${API_BASE}/kitaplar`)
             .then(r => setKitaplar(r.data))
             .catch(e => console.error(e));
     };
 
     const kitapEkle = () => {
         if (!yeniKitap.trim()) return;
-        axios.post(`${API}/kitaplar`, { ad: yeniKitap })
+        axios.post(`${API_BASE}/kitaplar`, { ad: yeniKitap })
             .then(() => { setYeniKitap(""); kitaplariGetir(); });
     };
 
     const rastgeleOner = () => {
-        axios.get(`${API}/kitaplar/rastgele`)
+        axios.get(`${API_BASE}/kitaplar/rastgele`)
             .then(r => setOneri(r.data))
             .catch(() => setOneri({ ad: "Kitap bulunamadı" }));
     };

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../api";
 
 function Whatsapp() {
     const [numara, setNumara] = useState("");
@@ -11,7 +12,7 @@ function Whatsapp() {
         if (!numara.trim() || !mesaj.trim()) return;
         setGonderiyor(true);
         setDurum(null);
-        axios.post("http://localhost:8000/whatsapp/mesaj-gonder", {
+        axios.post(`${API_BASE}/whatsapp/mesaj-gonder`, {
             numara,
             mesaj
         })
