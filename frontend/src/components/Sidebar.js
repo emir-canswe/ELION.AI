@@ -1,38 +1,78 @@
 const menuItems = [
-    { id: "dashboard", label: "🏠 Ana Sayfa" },
-    { id: "kitaplar", label: "📚 Kitaplar" },
-    { id: "filmler", label: "🎬 Filmler" },
-    { id: "hatirlatmalar", label: "⏰ Hatırlatmalar" },
-    { id: "gunluk", label: "📖 Günlük" },
-    { id: "dosyalar", label: "📁 Dosyalar" },
-    { id: "whatsapp", label: "💬 WhatsApp" },
+    { id: "dashboard", label: "Ana Sayfa", iconClass: "fas fa-home" },
+    { id: "kitaplar", label: "Kitaplar", iconClass: "fas fa-book" },
+    { id: "filmler", label: "Filmler", iconClass: "fas fa-film" },
+    { id: "hatirlatmalar", label: "Hatırlatmalar", iconClass: "fas fa-clock" },
+    { id: "gunluk", label: "Günlük", iconClass: "fas fa-book-open" },
+    { id: "dosyalar", label: "Dosyalar", iconClass: "fas fa-folder-open" },
 ];
 
-function Sidebar({ aktif, setAktif }) {
+function normalize(s) {
+    return s.toLocaleLowerCase("tr-TR");
+}
+
+function Sidebar({ aktif, setAktif, collapsed, filterText = "" }) {
+    const q = normalize(filterText.trim());
+    const filtered = q
+        ? menuItems.filter(
+              (item) =>
+                  normalize(item.label).includes(q) ||
+                  normalize(item.id).includes(q)
+          )
+        : menuItems;
+
     return (
-        <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
-            <div className="p-6 border-b border-gray-800">
-                <h1 className="text-2xl font-bold text-cyan-400">⚡ Elion</h1>
-                <p className="text-gray-400 text-sm mt-1">Kişisel Asistan</p>
+        <aside className={`elion-sidebar ${collapsed ? "elion-sidebar--collapsed" : ""}`}>
+            <div className="elion-logo-row">
+                <i className="fas fa-bolt elion-logo-icon" aria-hidden />
+                {!collapsed && (
+                    <div className="elion-logo-text">
+                        <h1>ELION</h1>
+                        <span>Kişisel Asistan</span>
+                    </div>
+                )}
             </div>
-            <nav className="flex-1 p-4 space-y-2">
-                {menuItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => setAktif(item.id)}
-                        className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${aktif === item.id
-                                ? "bg-cyan-500 text-white font-semibold"
-                                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+
+            {!collapsed && filterText && filtered.length === 0 && (
+                <p className="elion-sidebar-hint">Sonuç yok — üstteki aramayı değiştir.</p>
+            )}
+
+            <ul className="elion-nav">
+                {filtered.map((item) => (
+                    <li key={item.id}>
+                        <button
+                            type="button"
+                            title={collapsed ? item.label : undefined}
+                            className={`elion-nav-btn ${aktif === item.id ? "active" : ""} ${
+                                collapsed ? "elion-nav-btn--collapsed" : ""
                             }`}
-                    >
-                        {item.label}
-                    </button>
+                            onClick={() => setAktif(item.id)}
+                        >
+                            <i className={item.iconClass} aria-hidden />
+                            {!collapsed && <span className="elion-nav-label">{item.label}</span>}
+                        </button>
+                    </li>
                 ))}
-            </nav>
-            <div className="p-4 border-t border-gray-800">
-                <p className="text-gray-600 text-xs text-center">Elion v2.0</p>
+            </ul>
+
+            <div className="elion-sidebar-footer">
+                <button
+                    type="button"
+                    title={collapsed ? "WhatsApp" : undefined}
+                    className={`elion-wa-cta ${aktif === "whatsapp" ? "elion-wa-cta--active" : ""} ${
+                        collapsed ? "elion-wa-cta--collapsed" : ""
+                    }`}
+                    onClick={() => setAktif("whatsapp")}
+                >
+                    <i className="fa-brands fa-whatsapp" aria-hidden />
+                    {!collapsed && <span>WhatsApp</span>}
+                </button>
+                <button type="button" className="elion-sidebar-lock" title="Kilit" aria-label="Kilit">
+                    <i className="fas fa-lock" aria-hidden />
+                </button>
+                {!collapsed && <div className="elion-version">v3.0 Pro AI</div>}
             </div>
-        </div>
+        </aside>
     );
 }
 

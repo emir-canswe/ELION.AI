@@ -12,72 +12,74 @@ function Whatsapp() {
         if (!numara.trim() || !mesaj.trim()) return;
         setGonderiyor(true);
         setDurum(null);
-        axios.post(`${API_BASE}/whatsapp/mesaj-gonder`, {
-            numara,
-            mesaj
-        })
-            .then(r => {
+        axios
+            .post(`${API_BASE}/whatsapp/mesaj-gonder`, {
+                numara,
+                mesaj,
+            })
+            .then((r) => {
                 setDurum({ basari: true, mesaj: r.data.mesaj || "Mesaj gönderildi ✅" });
                 setMesaj("");
             })
-            .catch(e => {
-                setDurum({ basari: false, mesaj: "Hata: " + (e.response?.data?.detail || e.message) });
+            .catch((e) => {
+                setDurum({
+                    basari: false,
+                    mesaj: "Hata: " + (e.response?.data?.detail || e.message),
+                });
             })
             .finally(() => setGonderiyor(false));
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">💬 WhatsApp</h2>
-            <p className="text-gray-400 mb-8">İstediğin kişiye WhatsApp mesajı gönder.</p>
+        <div className="elion-page">
+            <h2 className="elion-page-title">WhatsApp</h2>
+            <p className="elion-lead">İstediğin kişiye WhatsApp mesajı gönder.</p>
 
-            {/* Bilgi Kutusu */}
-            <div className="bg-gray-900 border border-green-800 rounded-xl p-4 mb-6">
-                <p className="text-green-400 text-sm">
-                    📱 Numara formatı: <span className="font-mono">905xxxxxxxxx</span> (başında + olmadan, ülke kodu ile)
+            <div className="elion-card">
+                <p style={{ color: "#7dffc4", fontSize: "0.88rem", margin: 0 }}>
+                    Numara: <span style={{ fontFamily: "monospace" }}>905xxxxxxxxx</span> (+ olmadan, ülke kodu ile)
                 </p>
-                <p className="text-gray-400 text-sm mt-1">
-                    Örnek: Türkiye için 90 ile başla → <span className="font-mono">905321234567</span>
+                <p className="elion-muted" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+                    Örnek: <span style={{ fontFamily: "monospace" }}>905321234567</span>
                 </p>
             </div>
 
-            {/* Form */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Mesaj Gönder</h3>
-                <div className="space-y-4">
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Mesaj gönder</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <div>
-                        <label className="text-gray-400 text-sm mb-1 block">Telefon Numarası</label>
+                        <label className="elion-muted" style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem" }}>
+                            Telefon
+                        </label>
                         <input
                             type="text"
+                            className="elion-input"
                             value={numara}
-                            onChange={e => setNumara(e.target.value)}
+                            onChange={(e) => setNumara(e.target.value)}
                             placeholder="905321234567"
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
                         />
                     </div>
                     <div>
-                        <label className="text-gray-400 text-sm mb-1 block">Mesaj</label>
+                        <label className="elion-muted" style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem" }}>
+                            Mesaj
+                        </label>
                         <textarea
-                            value={mesaj}
-                            onChange={e => setMesaj(e.target.value)}
-                            placeholder="Mesajını yaz..."
+                            className="elion-textarea"
                             rows={5}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
+                            value={mesaj}
+                            onChange={(e) => setMesaj(e.target.value)}
+                            placeholder="Mesajını yaz..."
                         />
                     </div>
 
                     {durum && (
-                        <div className={`rounded-lg px-4 py-3 ${durum.basari ? "bg-green-900 text-green-300" : "bg-red-900 text-red-300"}`}>
+                        <div className={durum.basari ? "elion-alert elion-alert--ok" : "elion-alert elion-alert--err"}>
                             {durum.mesaj}
                         </div>
                     )}
 
-                    <button
-                        onClick={mesajGonder}
-                        disabled={gonderiyor}
-                        className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold px-6 py-2 rounded-lg transition"
-                    >
-                        {gonderiyor ? "Gönderiliyor..." : "📤 Gönder"}
+                    <button type="button" className="elion-btn" disabled={gonderiyor} onClick={mesajGonder}>
+                        {gonderiyor ? "Gönderiliyor…" : "Gönder"}
                     </button>
                 </div>
             </div>

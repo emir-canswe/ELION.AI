@@ -7,56 +7,72 @@ function Kitaplar() {
     const [yeniKitap, setYeniKitap] = useState("");
     const [oneri, setOneri] = useState(null);
 
-    useEffect(() => { kitaplariGetir(); }, []);
+    useEffect(() => {
+        kitaplariGetir();
+    }, []);
 
     const kitaplariGetir = () => {
-        axios.get(`${API_BASE}/kitaplar`)
-            .then(r => setKitaplar(r.data))
-            .catch(e => console.error(e));
+        axios
+            .get(`${API_BASE}/kitaplar`)
+            .then((r) => setKitaplar(r.data))
+            .catch((e) => console.error(e));
     };
 
     const kitapEkle = () => {
         if (!yeniKitap.trim()) return;
-        axios.post(`${API_BASE}/kitaplar`, { ad: yeniKitap })
-            .then(() => { setYeniKitap(""); kitaplariGetir(); });
+        axios.post(`${API_BASE}/kitaplar`, { ad: yeniKitap }).then(() => {
+            setYeniKitap("");
+            kitaplariGetir();
+        });
     };
 
     const rastgeleOner = () => {
-        axios.get(`${API_BASE}/kitaplar/rastgele`)
-            .then(r => setOneri(r.data))
+        axios
+            .get(`${API_BASE}/kitaplar/rastgele`)
+            .then((r) => setOneri(r.data))
             .catch(() => setOneri({ ad: "Kitap bulunamadı" }));
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">📚 Kitaplar</h2>
-            <p className="text-gray-400 mb-8">Kitap listeni yönet ve rastgele öneri al.</p>
-            <div className="bg-gray-900 border border-cyan-800 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold text-cyan-400 mb-4">Rastgele Öneri</h3>
-                {oneri && <p className="text-white text-xl mb-4">📖 {oneri.ad}</p>}
-                <button onClick={rastgeleOner} className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition">Öneri Al</button>
+        <div className="elion-page">
+            <h2 className="elion-page-title">Kitaplar</h2>
+            <p className="elion-lead">Kitap listeni yönet ve rastgele öneri al.</p>
+
+            <div className="elion-card">
+                <h3>Rastgele öneri</h3>
+                {oneri && <p style={{ color: "var(--text-main)", fontSize: "1.15rem", marginBottom: "1rem" }}>{oneri.ad}</p>}
+                <button type="button" className="elion-btn" onClick={rastgeleOner}>
+                    Öneri al
+                </button>
             </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Kitap Ekle</h3>
-                <div className="flex gap-3">
-                    <input type="text" value={yeniKitap} onChange={e => setYeniKitap(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && kitapEkle()}
+
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Kitap ekle</h3>
+                <div className="flex-gap">
+                    <input
+                        type="text"
+                        className="elion-input"
+                        style={{ flex: 1, minWidth: "12rem" }}
+                        value={yeniKitap}
+                        onChange={(e) => setYeniKitap(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && kitapEkle()}
                         placeholder="Kitap adı..."
-                        className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500" />
-                    <button onClick={kitapEkle} className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-lg transition">Ekle</button>
+                    />
+                    <button type="button" className="elion-btn" onClick={kitapEkle}>
+                        Ekle
+                    </button>
                 </div>
             </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Kitap Listesi ({kitaplar.length})</h3>
-                <div className="space-y-2">
-                    {kitaplar.length === 0 && <p className="text-gray-500">Henüz kitap eklenmemiş.</p>}
-                    {kitaplar.map(k => (
-                        <div key={k.id} className="flex items-center gap-3 bg-gray-800 rounded-lg px-4 py-3">
-                            <span className="text-cyan-400">📖</span>
-                            <span className="text-white">{k.ad}</span>
-                        </div>
-                    ))}
-                </div>
+
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Kitap listesi ({kitaplar.length})</h3>
+                {kitaplar.length === 0 && <p className="elion-muted">Henüz kitap eklenmemiş.</p>}
+                {kitaplar.map((k) => (
+                    <div key={k.id} className="elion-list-item">
+                        <span style={{ color: "var(--accent-glow)" }}>📖</span>
+                        <span>{k.ad}</span>
+                    </div>
+                ))}
             </div>
         </div>
     );

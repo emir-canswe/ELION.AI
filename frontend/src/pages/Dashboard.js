@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
 import { API_BASE } from "../api";
+import AiAvatar from "../components/AiAvatar";
 
 const KOMUTLAR = {
     selamlama: ["merhaba", "merhaba elion", "hey elion", "selam", "hey", "selam elion", "günaydın", "günaydın elion", "iyi günler", "iyi akşamlar"],
@@ -69,6 +70,11 @@ export default function Dashboard() {
     const [komutlarAcik, setKomutlarAcik] = useState(false);
     const recognitionRef = useRef(null);
     const logSonuRef = useRef(null);
+    const dinliyorRef = useRef(false);
+
+    useEffect(() => {
+        dinliyorRef.current = dinliyor;
+    }, [dinliyor]);
 
     useEffect(() => {
         logSonuRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -438,7 +444,9 @@ export default function Dashboard() {
             komutIsle(ses);
         };
         recognition.onerror = (e) => { setDurum("Hata: " + e.error); setDinliyor(false); };
-        recognition.onend = () => { if (dinliyor) recognition.start(); };
+        recognition.onend = () => {
+            if (dinliyorRef.current) recognition.start();
+        };
         recognitionRef.current = recognition;
         recognition.start();
     };
@@ -446,7 +454,7 @@ export default function Dashboard() {
     const dinlemeDurdur = () => {
         if (recognitionRef.current) recognitionRef.current.stop();
         setDinliyor(false);
-        setDurum("Elion bekliyyor. Mikrofona bas ve konuş.");
+        setDurum("Elion bekliyor. Mikrofona bas ve konuş.");
     };
 
     const klavyeGonder = () => {
@@ -455,116 +463,188 @@ export default function Dashboard() {
         setYazilan("");
     };
 
+    const micClick = () => {
+        if (!baslatildi) {
+            elioniBaslat();
+            return;
+        }
+        if (dinliyor) dinlemeDurdur();
+        else dinlemeBaslat();
+    };
+
+    const resetElion = () => {
+        dinlemeDurdur();
+        setBaslatildi(false);
+        setLoglar([]);
+        setMod(null);
+        setAltAdim(null);
+        setGeciciVeri({});
+    };
+
     if (!baslatildi) {
         return (
-            <div className="flex flex-col items-center justify-center h-full">
-                <div className="text-center mb-12">
-                    <h1 className="text-6xl font-black text-white mb-3 tracking-tight">
-                        ⚡ <span className="text-cyan-400">Elion</span>
-                    </h1>
-                    <p className="text-gray-400 text-lg">Kişisel Yapay Zeka Asistanınız</p>
+            <div className="elion-dash-root elion-dash-root--clean">
+                <div className="elion-dash-centered">
+                    <div className="elion-ai-hero elion-ai-hero--tight">
+                        <AiAvatar listening={false} />
+                        <div className="elion-speech elion-glass elion-speech--clean">
+                            <div className="elion-speech__head">
+                                <span className="elion-speech__title">Assistant</span>
+                                <span className="elion-online-badge elion-online-badge--off">
+                                    <i className="fas fa-circle" /> Beklemede
+                                </span>
+                            </div>
+                            <p className="elion-speech__sub">Elion · kişisel yapay zeka</p>
+                            <p className="elion-speech__body">
+                                Mikrofon düğmesine basarak başlat.
+                            </p>
+                        </div>
+                    </div>
+                    <div className={`ai-core-container ai-core-container--clean${dinliyor ? " is-listening" : ""}`}>
+                        <div className="ring ring-1" />
+                        <div className="ring ring-2" />
+                        <div className="ring ring-3" />
+                        <div className="pulse-layer" />
+                        <div className="pulse-layer" />
+                        <div className="pulse-layer" />
+                        <button type="button" className="mic-button" onClick={micClick}>
+                            <i className="fas fa-microphone" aria-hidden />
+                            <span>BAŞLAT</span>
+                        </button>
+                    </div>
                 </div>
-                <div className="relative flex items-center justify-center mb-12">
-                    <div className="absolute w-48 h-48 rounded-full border border-cyan-500 opacity-20 animate-ping" />
-                    <div className="absolute w-36 h-36 rounded-full border border-cyan-400 opacity-30 animate-pulse" />
-                    <button
-                        onClick={elioniBaslat}
-                        className="relative w-28 h-28 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-lg shadow-2xl shadow-cyan-500/40 transition-all duration-300 hover:scale-110 flex flex-col items-center justify-center gap-1"
-                    >
-                        <span className="text-3xl">🎤</span>
-                        <span className="text-xs font-semibold">BAŞLAT</span>
-                    </button>
-                </div>
-                <p className="text-gray-600 text-sm">Elion'u aktif etmek için butona bas</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4">
-                <div>
-                    <h2 className="text-3xl font-bold text-white">⚡ Elion</h2>
-                    <p className="text-gray-400 text-sm">Sesli Kişisel Asistan</p>
+        <div className="elion-dash-root elion-dash-root--clean">
+            <div className="elion-dash-centered">
+                <div className="elion-dash-inline-tools">
+                    <span className={`elion-pill${dinliyor ? " elion-pill--live" : ""}`}>
+                        {dinliyor ? "canlı" : "hazır"}
+                    </span>
+                    <button type="button" className="elion-btn-ghost elion-btn-ghost--small" onClick={resetElion}>
+                        Oturumu kapat
+                    </button>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${dinliyor ? "bg-cyan-900 text-cyan-300" : "bg-gray-800 text-gray-400"}`}>
-                        <div className={`w-2 h-2 rounded-full ${dinliyor ? "bg-cyan-400 animate-pulse" : "bg-gray-600"}`} />
-                        {dinliyor ? "Dinliyor" : "Bekliyor"}
+
+                <div className="elion-ai-hero elion-ai-hero--tight">
+                    <AiAvatar listening={dinliyor} />
+                    <div className="elion-speech elion-glass elion-speech--clean">
+                        <div className="elion-speech__head">
+                            <span className="elion-speech__title">Assistant</span>
+                            <span className={`elion-online-badge ${dinliyor ? "elion-online-badge--live" : ""}`}>
+                                <i className="fas fa-circle" />
+                                {dinliyor ? "Çevrimiçi" : "Hazır"}
+                            </span>
+                        </div>
+                        <p className="elion-speech__sub">Elion · kişisel yapay zeka</p>
+                        <p className={`elion-speech__body ${dinliyor ? "elion-speech__body--live" : ""}`}>{durum}</p>
+                        {mod && (
+                            <p className="elion-mode-line elion-mode-line--clean">
+                                {mod}
+                                {altAdim ? ` · ${altAdim}` : ""}
+                            </p>
+                        )}
                     </div>
+                </div>
+
+                <div className={`ai-core-container ai-core-container--clean${dinliyor ? " is-listening" : ""}`}>
+                    <div className="ring ring-1" />
+                    <div className="ring ring-2" />
+                    <div className="ring ring-3" />
+                    <div className="pulse-layer" />
+                    <div className="pulse-layer" />
+                    <div className="pulse-layer" />
                     <button
-                        onClick={() => { dinlemeDurdur(); setBaslatildi(false); setLoglar([]); setMod(null); }}
-                        className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-900 text-red-300 hover:bg-red-800 transition"
+                        type="button"
+                        className={`mic-button${dinliyor ? " listening" : ""}`}
+                        onClick={micClick}
                     >
-                        ⏻ Kapat
+                        <i className="fas fa-microphone" aria-hidden />
+                        <span>{dinliyor ? "DURDUR" : "DİNLE"}</span>
                     </button>
                 </div>
             </div>
 
-            <div className={`rounded-xl p-3 mb-4 border ${dinliyor ? "border-cyan-500 bg-cyan-950" : "border-gray-700 bg-gray-900"}`}>
-                <p className="text-white text-sm">{durum}</p>
-                {mod && <p className="text-yellow-400 text-xs mt-1">🔄 {mod} {altAdim ? `→ ${altAdim}` : ""}</p>}
-            </div>
-
-            <div className="flex gap-3 mb-4">
-                <button onClick={dinlemeBaslat} disabled={dinliyor}
-                    className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-40 text-white font-bold py-3 rounded-xl transition">
-                    🎤 Dinlemeye Başla
-                </button>
-                <button onClick={dinlemeDurdur} disabled={!dinliyor}
-                    className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white font-bold py-3 rounded-xl transition">
-                    ⏹️ Durdur
-                </button>
-            </div>
-
-            <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl p-4 overflow-auto mb-3">
-                <p className="text-gray-400 text-xs font-semibold mb-3">💬 Konuşma Geçmişi</p>
-                <div className="space-y-2">
-                    {loglar.length === 0 && <p className="text-gray-600 text-sm">Henüz konuşma yok.</p>}
-                    {loglar.map((l, i) => (
-                        <div key={i} className={`flex ${l.kimden.includes("Sen") ? "justify-end" : "justify-start"}`}>
-                            <div className={`rounded-xl px-4 py-2 text-sm max-w-sm ${l.kimden.includes("Sen") ? "bg-cyan-700 text-white" : "bg-gray-800 text-gray-200"}`}>
-                                <p className="font-semibold text-xs opacity-60 mb-1">{l.kimden} · {l.zaman}</p>
-                                <p>{l.mesaj}</p>
-                            </div>
-                        </div>
-                    ))}
-                    <div ref={logSonuRef} />
-                </div>
-            </div>
-
-            <div className="flex gap-3 mb-2">
-                <input type="text" value={yazilan}
-                    onChange={e => setYazilan(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && klavyeGonder()}
-                    placeholder="Elion'a bir şey yaz... (Enter ile gönder)"
-                    className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
-                />
-                <button onClick={klavyeGonder}
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-3 rounded-xl transition font-semibold">
-                    📤
-                </button>
-            </div>
-
-            <div>
-                <button onClick={() => setKomutlarAcik(k => !k)}
-                    className="text-gray-400 hover:text-white text-sm font-semibold flex items-center gap-2 transition mb-1">
-                    💡 Komutlar {komutlarAcik ? "▲" : "▼"}
-                </button>
-                {komutlarAcik && (
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                        {[
-                            "🎬 Film öner", "📚 Kitap öner", "⏰ Hatırlatma ekle",
-                            "💬 Mesaj gönder", "🔍 Google'da ara", "▶️ YouTube aç",
-                            "📁 Dosyaları aç", "📖 Günlük yaz", "👋 Merhaba",
-                            "🕐 Saat kaç", "📅 Bugün ne günü", "🎲 Beni şaşırt"
-                        ].map((k, i) => (
-                            <div key={i} className="bg-gray-800 hover:bg-gray-700 cursor-pointer rounded-xl px-3 py-3 text-gray-300 text-center text-sm font-medium transition">
-                                {k}
-                            </div>
-                        ))}
+            <div className="elion-dash-unified elion-glass">
+                <section className="elion-dash-unified__section">
+                    <h4 className="elion-panel-title">Konuşma</h4>
+                    <div className="elion-log-scroll elion-log-scroll--clean">
+                        {loglar.length === 0 && <p className="elion-muted">Henüz kayıt yok.</p>}
+                        {loglar.map((l, i) => {
+                            const user = l.kimden.includes("Sen");
+                            return (
+                                <div
+                                    key={i}
+                                    className={`elion-log-bubble ${user ? "elion-log-bubble--user" : "elion-log-bubble--elion"}`}
+                                >
+                                    <div className="elion-log-meta">
+                                        {l.kimden} · {l.zaman}
+                                    </div>
+                                    {l.mesaj}
+                                </div>
+                            );
+                        })}
+                        <div ref={logSonuRef} />
                     </div>
-                )}
+                </section>
+
+                <div className="elion-dash-unified__divider" />
+
+                <section className="elion-dash-unified__section">
+                    <h4 className="elion-panel-title">Metin komutu</h4>
+                    <div className="elion-row-input">
+                        <input
+                            type="text"
+                            className="elion-input"
+                            style={{ flex: 1 }}
+                            value={yazilan}
+                            onChange={(e) => setYazilan(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && klavyeGonder()}
+                            placeholder="Yaz ve Enter…"
+                        />
+                        <button type="button" className="elion-btn" onClick={klavyeGonder}>
+                            <i className="fas fa-paper-plane" aria-hidden />
+                        </button>
+                    </div>
+                </section>
+
+                <div className="elion-dash-unified__divider" />
+
+                <section className="elion-dash-unified__section">
+                    <button
+                        type="button"
+                        className="elion-cmd-toggle"
+                        onClick={() => setKomutlarAcik((k) => !k)}
+                    >
+                        <i className="fas fa-lightbulb" aria-hidden />
+                        Komut örnekleri {komutlarAcik ? "▲" : "▼"}
+                    </button>
+                    {komutlarAcik && (
+                        <div className="elion-cmd-grid elion-cmd-grid--clean">
+                            {[
+                                "Film öner",
+                                "Kitap öner",
+                                "Hatırlatma ekle",
+                                "Mesaj gönder",
+                                "Google'da ara",
+                                "YouTube aç",
+                                "Dosyaları aç",
+                                "Günlük yaz",
+                                "Merhaba",
+                                "Saat kaç",
+                                "Bugün ne günü",
+                                "Beni şaşırt",
+                            ].map((k, i) => (
+                                <div key={i} className="elion-cmd-chip">
+                                    {k}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
         </div>
     );

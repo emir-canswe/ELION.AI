@@ -1,0 +1,1493 @@
+/* Elion v3 — arayüz teması (Inter + Orbitron + Font Awesome) */
+
+:root {
+    --bg-deep: #050505;
+    --bg-shell: #0a0a0f;
+    --bg-panel: rgba(22, 22, 28, 0.82);
+    --border-color: rgba(255, 255, 255, 0.07);
+    --text-main: #ffffff;
+    --text-muted: #8a8a94;
+    --accent-glow: #00f0ff;
+    --accent-dark: #0088ff;
+    --danger: #ff3366;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+.elion-app {
+    min-height: 100%;
+    height: 100%;
+    background-color: var(--bg-shell);
+    color: var(--text-main);
+    display: flex;
+    overflow: hidden;
+    font-family: "Inter", system-ui, sans-serif;
+    background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 240, 255, 0.07) 0%, transparent 55%),
+        radial-gradient(circle at 80% 20%, rgba(0, 136, 255, 0.05) 0%, transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+.elion-app * {
+    box-sizing: border-box;
+}
+
+/* ——— Sidebar ——— */
+.elion-sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: linear-gradient(180deg, rgba(18, 18, 22, 0.95) 0%, rgba(10, 10, 14, 0.98) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(0, 240, 255, 0.08);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 0 0;
+    z-index: 20;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.elion-sidebar--collapsed {
+    width: 78px;
+    min-width: 78px;
+}
+
+.elion-logo-row {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    min-height: 4.5rem;
+}
+
+.elion-sidebar--collapsed .elion-logo-row {
+    padding: 0 0.75rem 1rem;
+    flex-direction: column;
+}
+
+.elion-sidebar-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 0 1rem 0.75rem;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.elion-logo-icon {
+    font-size: 2rem;
+    color: var(--danger);
+    text-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+    animation: elion-pulse-danger 2s infinite alternate;
+}
+
+.elion-logo-text h1 {
+    font-family: "Orbitron", sans-serif;
+    font-size: 1.65rem;
+    letter-spacing: 2px;
+    color: var(--accent-glow);
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.elion-logo-text span {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.elion-nav {
+    list-style: none;
+    padding: 0 0.65rem;
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.elion-nav li {
+    margin-bottom: 0.35rem;
+}
+
+.elion-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: left;
+    transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+    font-family: inherit;
+}
+
+.elion-nav-btn--collapsed {
+    justify-content: center;
+    padding: 11px 10px;
+}
+
+.elion-nav-btn--collapsed:hover {
+    transform: none;
+}
+
+.elion-nav-label {
+    flex: 1;
+}
+
+.elion-nav-btn i {
+    font-size: 1.05rem;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.25s ease;
+}
+
+.elion-nav-btn:hover {
+    color: var(--text-main);
+    background: rgba(0, 240, 255, 0.06);
+    transform: translateX(3px);
+}
+
+.elion-nav-btn.active {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 240, 255, 0.18) 0%,
+        rgba(0, 240, 255, 0.04) 100%
+    );
+    color: var(--accent-glow);
+    box-shadow:
+        inset 3px 0 0 var(--accent-glow),
+        0 0 24px rgba(0, 240, 255, 0.12);
+    border-radius: 14px;
+}
+
+.elion-nav-btn.active i {
+    color: var(--accent-glow);
+    text-shadow: 0 0 12px rgba(0, 240, 255, 0.55);
+}
+
+.elion-sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 0.65rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.elion-wa-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 240, 255, 0.45);
+    background: linear-gradient(135deg, rgba(0, 40, 50, 0.9) 0%, rgba(0, 80, 90, 0.5) 100%);
+    color: var(--accent-glow);
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow:
+        inset 4px 0 0 rgba(0, 240, 255, 0.85),
+        0 0 28px rgba(0, 240, 255, 0.15);
+    transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
+}
+
+.elion-wa-cta:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        inset 4px 0 0 rgba(0, 240, 255, 1),
+        0 0 36px rgba(0, 240, 255, 0.28);
+    border-color: rgba(0, 240, 255, 0.75);
+}
+
+.elion-wa-cta--active {
+    background: linear-gradient(135deg, rgba(0, 60, 75, 0.95) 0%, rgba(0, 100, 115, 0.6) 100%);
+    box-shadow:
+        inset 4px 0 0 #fff,
+        0 0 40px rgba(0, 240, 255, 0.35);
+}
+
+.elion-wa-cta--collapsed {
+    padding: 12px 10px;
+}
+
+.elion-wa-cta i {
+    font-size: 1.35rem;
+}
+
+.elion-version {
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ——— Üst çubuk + çalışma alanı ——— */
+.elion-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: rgba(8, 8, 12, 0.4);
+}
+
+.elion-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 52px;
+    padding: 0 0.85rem 0 0;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    background: linear-gradient(180deg, rgba(18, 18, 24, 0.92) 0%, rgba(12, 12, 16, 0.88) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    z-index: 15;
+    flex-shrink: 0;
+}
+
+.elion-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.elion-topbar-icon-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--accent-glow);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.elion-topbar-icon-btn:hover {
+    background: rgba(0, 240, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+.elion-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 0.25rem;
+}
+
+.elion-topbar-logo-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+    flex-shrink: 0;
+}
+
+.elion-topbar-title {
+    display: block;
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.elion-topbar-sub {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    margin-top: 1px;
+}
+
+.elion-topbar-search-wrap {
+    flex: 1;
+    max-width: 520px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+}
+
+.elion-topbar--clean .elion-topbar-search-wrap:not(.elion-topbar-search-wrap--open) {
+    flex: 0;
+    max-width: none;
+    margin: 0;
+    justify-content: flex-end;
+}
+
+.elion-topbar-search-trigger {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.elion-topbar-search-trigger:hover {
+    color: var(--accent-glow);
+    background: rgba(0, 240, 255, 0.08);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.12);
+}
+
+.elion-topbar-search-wrap--open {
+    flex: 1;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.elion-topbar-search-ico {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.elion-topbar-search {
+    width: 100%;
+    padding: 10px 40px 10px 40px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.elion-topbar-search::placeholder {
+    color: #5c5c66;
+}
+
+.elion-topbar-search:focus {
+    outline: none;
+    border-color: rgba(0, 240, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.12);
+}
+
+.elion-topbar-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.elion-topbar-search-clear:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.elion-topbar-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.elion-topbar-right--minimal {
+    gap: 0.35rem;
+}
+
+.elion-topbar-pill {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 240, 255, 0.05);
+}
+
+/* ——— Main alan ——— */
+.elion-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.elion-main--dashboard {
+    overflow: auto;
+}
+
+.elion-main--page {
+    overflow: auto;
+    padding: 1.35rem 1.75rem 2rem;
+}
+
+/* ——— Dashboard / AI çekirdek ——— */
+.elion-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding: 1.5rem 1rem 2rem;
+    overflow-y: auto;
+}
+
+.elion-dashboard-top {
+    align-self: flex-end;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.elion-pill {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.elion-pill--live {
+    color: var(--accent-glow);
+    border-color: rgba(0, 240, 255, 0.35);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.12);
+}
+
+.elion-btn-ghost {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 51, 102, 0.4);
+    background: rgba(255, 51, 102, 0.08);
+    color: #ff6b8a;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.elion-btn-ghost:hover {
+    background: rgba(255, 51, 102, 0.18);
+}
+
+.ai-core-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+}
+
+.ai-core-container.is-listening .ring-1 {
+    border-top-color: var(--danger) !important;
+}
+
+.ai-core-container.is-listening .pulse-layer {
+    background: var(--danger) !important;
+}
+
+.ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    animation: elion-rotate 20s linear infinite;
+}
+
+.ring-1 {
+    width: 300px;
+    height: 300px;
+    border-top-color: var(--accent-glow);
+    animation-duration: 15s;
+}
+
+.ring-2 {
+    width: 260px;
+    height: 260px;
+    border-right-color: var(--accent-dark);
+    animation-duration: 10s;
+    animation-direction: reverse;
+}
+
+.ring-3 {
+    width: 220px;
+    height: 220px;
+    border-bottom-color: var(--danger);
+    animation-duration: 12s;
+}
+
+.pulse-layer {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    opacity: 0.1;
+    animation: elion-pulse-wave 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-layer:nth-child(5) {
+    animation-delay: 0.6s;
+}
+
+.pulse-layer:nth-child(6) {
+    animation-delay: 1.2s;
+}
+
+.mic-button {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #001a22 0%, #004d66 100%);
+    border: 2px solid rgba(0, 240, 255, 0.3);
+    box-shadow:
+        0 0 30px rgba(0, 240, 255, 0.2),
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.3s ease;
+    outline: none;
+    font-family: inherit;
+}
+
+.mic-button i {
+    font-size: 2.5rem;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.mic-button span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-main);
+}
+
+.mic-button:hover {
+    transform: scale(1.05);
+    box-shadow:
+        0 0 50px rgba(0, 240, 255, 0.35),
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
+    border-color: var(--accent-glow);
+}
+
+.mic-button.listening {
+    background: linear-gradient(135deg, #1a0008 0%, #660022 100%);
+    border-color: var(--danger);
+    box-shadow:
+        0 0 50px rgba(255, 51, 102, 0.4),
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.mic-button.listening i {
+    color: var(--danger);
+    animation: elion-mic-bounce 1s infinite alternate;
+}
+
+.ai-status-group {
+    text-align: center;
+    margin-top: 0.5rem;
+    width: 100%;
+    max-width: 560px;
+}
+
+.ai-title {
+    font-family: "Orbitron", sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--text-main);
+    margin-bottom: 10px;
+    letter-spacing: 4px;
+}
+
+.ai-title span {
+    color: var(--accent-glow);
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+.ai-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+}
+
+.status-text {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.04em;
+    transition: all 0.3s ease;
+    line-height: 1.45;
+}
+
+.status-text.active {
+    color: #ff6b8a;
+    border-color: rgba(255, 51, 102, 0.35);
+    box-shadow: 0 0 15px rgba(255, 51, 102, 0.12);
+}
+
+.elion-dash-panels {
+    width: 100%;
+    max-width: 640px;
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.elion-glass-panel {
+    background: var(--bg-panel);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1rem 1.15rem;
+}
+
+.elion-glass-panel h4 {
+    margin: 0 0 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.elion-mode-line {
+    font-size: 0.8rem;
+    color: #e0c46c;
+    margin-top: 0.35rem;
+}
+
+.elion-log-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.elion-log-bubble {
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+    max-width: 95%;
+}
+
+.elion-log-bubble--user {
+    align-self: flex-end;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+}
+
+.elion-log-bubble--elion {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+}
+
+.elion-log-meta {
+    font-size: 0.65rem;
+    opacity: 0.55;
+    margin-bottom: 0.2rem;
+}
+
+.elion-row-input {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.elion-cmd-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.35rem 0;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.elion-cmd-toggle:hover {
+    color: var(--accent-glow);
+}
+
+.elion-cmd-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.elion-cmd-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.65rem 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ——— Alt sayfalar ——— */
+.elion-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.elion-page-title {
+    font-family: "Orbitron", sans-serif;
+    font-size: 1.65rem;
+    letter-spacing: 0.06em;
+    color: var(--text-main);
+    margin: 0 0 0.35rem;
+}
+
+.elion-lead {
+    color: var(--text-muted);
+    margin: 0 0 1.75rem;
+    font-size: 0.95rem;
+}
+
+.elion-card {
+    background: var(--bg-panel);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.elion-card h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-glow);
+}
+
+.elion-card h3.elion-card-title-neutral {
+    color: var(--text-main);
+}
+
+.elion-input,
+.elion-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.92rem;
+}
+
+.elion-input::placeholder,
+.elion-textarea::placeholder {
+    color: #5c5c66;
+}
+
+.elion-input:focus,
+.elion-textarea:focus {
+    outline: none;
+    border-color: rgba(0, 240, 255, 0.45);
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.12);
+}
+
+.elion-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.elion-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    background: linear-gradient(135deg, #001a22 0%, #0a3d4d 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.25s;
+}
+
+.elion-btn:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(0, 240, 255, 0.3);
+    border-color: var(--accent-glow);
+}
+
+.elion-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.elion-btn--muted {
+    border-color: var(--border-color);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.elion-btn--danger {
+    border-color: rgba(255, 51, 102, 0.45);
+    background: rgba(255, 51, 102, 0.12);
+    color: #ff8fa3;
+}
+
+.elion-btn--danger:hover:not(:disabled) {
+    box-shadow: 0 0 18px rgba(255, 51, 102, 0.25);
+}
+
+.elion-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    margin-bottom: 0.45rem;
+}
+
+.elion-list-item span:last-child {
+    color: var(--text-main);
+}
+
+.elion-muted {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.elion-alert {
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+}
+
+.elion-alert--ok {
+    background: rgba(0, 255, 170, 0.08);
+    border: 1px solid rgba(0, 255, 170, 0.25);
+    color: #7dffc4;
+}
+
+.elion-alert--err {
+    background: rgba(255, 51, 102, 0.1);
+    border: 1px solid rgba(255, 51, 102, 0.35);
+    color: #ff9eb5;
+}
+
+.flex-gap {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.grid-files {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.5rem;
+}
+
+/* ——— Animasyonlar ——— */
+@keyframes elion-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes elion-pulse-wave {
+    0% {
+        transform: scale(1);
+        opacity: 0.45;
+    }
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+@keyframes elion-pulse-danger {
+    0% {
+        opacity: 0.75;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.08);
+        text-shadow: 0 0 25px rgba(255, 51, 102, 0.85);
+    }
+}
+
+@keyframes elion-mic-bounce {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-4px);
+        filter: drop-shadow(0 0 10px rgba(255, 51, 102, 0.6));
+    }
+}
+
+/* ——— Referans dashboard: üst çubuk + iki sütun ——— */
+.elion-topbar-traffic {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 6px 0 12px;
+    flex-shrink: 0;
+}
+
+.elion-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.elion-dot--r {
+    background: #ff5f57;
+}
+.elion-dot--y {
+    background: #febc2e;
+}
+.elion-dot--g {
+    background: #28c840;
+}
+
+.elion-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding: 0 0.25rem;
+    white-space: nowrap;
+}
+
+.elion-breadcrumb__sep {
+    opacity: 0.45;
+    user-select: none;
+}
+
+.elion-breadcrumb strong {
+    color: var(--text-main);
+    font-weight: 600;
+    font-family: "Orbitron", sans-serif;
+    letter-spacing: 0.04em;
+}
+
+.elion-topbar-cta {
+    padding: 7px 14px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(180deg, #00d4f5 0%, #0088cc 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.4);
+    transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.elion-topbar-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 26px rgba(0, 240, 255, 0.55);
+}
+
+.elion-sidebar-lock {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s, background 0.2s;
+}
+
+.elion-sidebar-lock:hover {
+    color: var(--accent-glow);
+    background: rgba(0, 240, 255, 0.08);
+}
+
+/* Dashboard iki sütun */
+.elion-dash-root {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0.85rem 1.1rem 1.25rem;
+    overflow: auto;
+}
+
+.elion-dash-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+
+.elion-dash-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 1.25rem 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .elion-dash-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.elion-dash-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.elion-ai-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.elion-ai-avatar {
+    width: min(220px, 55vw);
+    max-width: 260px;
+    filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.45));
+}
+
+.elion-ai-avatar--pulse {
+    animation: elion-avatar-pulse 2.8s ease-in-out infinite;
+}
+
+.elion-ai-avatar__svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@keyframes elion-avatar-pulse {
+    0%,
+    100% {
+        filter: drop-shadow(0 0 22px rgba(0, 240, 255, 0.45));
+    }
+    50% {
+        filter: drop-shadow(0 0 38px rgba(0, 240, 255, 0.75));
+    }
+}
+
+.elion-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    box-shadow:
+        0 0 40px rgba(0, 240, 255, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.elion-speech {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+.elion-speech__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.elion-speech__title {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-glow);
+    text-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+}
+
+.elion-online-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0, 255, 140, 0.1);
+    border: 1px solid rgba(0, 255, 140, 0.35);
+    color: #7dffc4;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.elion-online-badge i {
+    font-size: 0.45rem;
+    color: #28c840;
+}
+
+.elion-online-badge--live {
+    box-shadow: 0 0 14px rgba(40, 200, 64, 0.35);
+}
+
+.elion-online-badge--off {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+}
+
+.elion-online-badge--off i {
+    color: #888;
+}
+
+.elion-speech__sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+}
+
+.elion-speech__body {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.elion-speech__body--live {
+    color: #ff9ec9;
+}
+
+.elion-dash-analytics {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.elion-chart-card {
+    padding: 1rem 1.1rem 1.15rem;
+}
+
+.elion-panel-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem;
+}
+
+.elion-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 5px;
+    height: 130px;
+    padding: 0.25rem 0 0;
+}
+
+.elion-chart__bar-wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    min-width: 0;
+}
+
+.elion-chart__bar {
+    width: 100%;
+    border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(180deg, rgba(0, 240, 255, 0.55) 0%, rgba(0, 80, 120, 0.2) 100%);
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    min-height: 12%;
+    transition: height 0.4s ease;
+}
+
+.elion-stat-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.elion-stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid var(--border-color);
+    font-size: 0.82rem;
+}
+
+.elion-stat-line__l {
+    color: var(--text-muted);
+}
+
+.elion-stat-line__r {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.elion-stat-dot {
+    font-size: 0.45rem !important;
+}
+
+.elion-stat-dot--ok {
+    color: #28c840;
+}
+
+.elion-stat-dot--warn {
+    color: #febc2e;
+}
+
+.elion-dash-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-top: 0.25rem;
+}
+
+.elion-btn-secondary-dash {
+    padding: 0.55rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.elion-btn-secondary-dash:hover {
+    border-color: rgba(0, 240, 255, 0.35);
+    background: rgba(0, 240, 255, 0.06);
+}
+
+.elion-mega-btn {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border: none;
+    border-radius: 16px;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.28em;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #004d5c 0%, #00a3c4 40%, #0066cc 100%);
+    box-shadow:
+        0 0 32px rgba(0, 240, 255, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.elion-mega-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 0 48px rgba(0, 240, 255, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.elion-dash-panels--wide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.15rem;
+}
+
+.elion-glass--panel {
+    padding: 1rem 1.1rem;
+}
+
+.elion-glass--panel .elion-panel-title {
+    margin-bottom: 0.65rem;
+}
+
+@media (max-width: 700px) {
+    .elion-topbar-pill {
+        display: none;
+    }
+}
+
+/* ——— Tek kolon, sade dashboard ——— */
+.elion-dash-root--clean {
+    padding: 0.65rem 0.85rem 1.25rem;
+}
+
+.elion-dash-centered {
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.1rem;
+}
+
+.elion-ai-hero--tight {
+    gap: 1rem;
+    width: 100%;
+}
+
+.elion-speech--clean {
+    max-width: none;
+    width: 100%;
+    padding: 1rem 1.15rem;
+}
+
+.elion-dash-inline-tools {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.elion-btn-ghost--small {
+    font-size: 0.72rem;
+    padding: 5px 11px;
+    border-radius: 9px;
+}
+
+.ai-core-container--clean {
+    margin-bottom: 0;
+    align-self: center;
+    transform: scale(0.9);
+    transform-origin: center top;
+}
+
+.elion-mode-line--clean {
+    margin: 0.45rem 0 0;
+    font-size: 0.78rem;
+}
+
+.elion-dash-unified {
+    max-width: 500px;
+    width: 100%;
+    margin: 1.35rem auto 0;
+    padding: 1rem 1.2rem 1.1rem;
+    border-radius: 18px;
+}
+
+.elion-dash-unified__section {
+    margin: 0;
+}
+
+.elion-dash-unified__divider {
+    height: 1px;
+    margin: 0.95rem 0;
+    border: none;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 240, 255, 0.18),
+        transparent
+    );
+}
+
+.elion-log-scroll--clean {
+    max-height: 150px;
+}
+
+.elion-cmd-grid--clean {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+@media (min-width: 480px) {
+    .elion-cmd-grid--clean {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

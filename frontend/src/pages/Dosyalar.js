@@ -10,9 +10,10 @@ function Dosyalar() {
 
     const kokDizinleriGetir = () => {
         setYukluyor(true);
-        axios.get(`${API_BASE}/dosyalar`)
-            .then(r => {
-                setDizinler(r.data.dizinler.map(d => ({ ad: d, yol: d })));
+        axios
+            .get(`${API_BASE}/dosyalar`)
+            .then((r) => {
+                setDizinler(r.data.dizinler.map((d) => ({ ad: d, yol: d })));
                 setDosyalar([]);
                 setMevcutYol("Bilgisayarım");
             })
@@ -21,79 +22,78 @@ function Dosyalar() {
 
     const dizinAc = (yol) => {
         setYukluyor(true);
-        axios.post(`${API_BASE}/dosyalar`, { yol })
-            .then(r => {
+        axios
+            .post(`${API_BASE}/dosyalar`, { yol })
+            .then((r) => {
                 setDizinler(r.data.dizinler);
                 setDosyalar(r.data.dosyalar);
                 setMevcutYol(yol);
             })
-            .catch(e => alert("Erişim engellendi veya hata: " + e.message))
+            .catch((e) => alert("Erişim engellendi veya hata: " + e.message))
             .finally(() => setYukluyor(false));
     };
 
     const dosyaAc = (yol) => {
-        axios.post(`${API_BASE}/dosya-ac`, { yol })
+        axios
+            .post(`${API_BASE}/dosya-ac`, { yol })
             .then(() => alert("Dosya açıldı!"))
-            .catch(e => alert("Hata: " + e.message));
+            .catch((e) => alert("Hata: " + e.message));
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">📁 Dosyalar</h2>
-            <p className="text-gray-400 mb-8">Bilgisayarındaki dosyalara göz at ve aç.</p>
+        <div className="elion-page">
+            <h2 className="elion-page-title">Dosyalar</h2>
+            <p className="elion-lead">Bilgisayarındaki dosyalara göz at ve aç.</p>
 
-            {/* Araç Çubuğu */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4 flex items-center gap-4">
-                <button
-                    onClick={kokDizinleriGetir}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition text-sm"
-                >
-                    🖥️ Bilgisayarım
+            <div className="elion-card flex-gap" style={{ alignItems: "center" }}>
+                <button type="button" className="elion-btn elion-btn--muted" onClick={kokDizinleriGetir}>
+                    Bilgisayarım
                 </button>
-                {mevcutYol && (
-                    <span className="text-gray-400 text-sm">📍 {mevcutYol}</span>
-                )}
-                {yukluyor && <span className="text-yellow-400 text-sm">Yükleniyor...</span>}
+                {mevcutYol && <span className="elion-muted">📍 {mevcutYol}</span>}
+                {yukluyor && <span style={{ color: "#e0c46c", fontSize: "0.85rem" }}>Yükleniyor…</span>}
             </div>
 
-            {/* İçerik */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <div className="elion-card">
                 {dizinler.length === 0 && dosyalar.length === 0 && (
-                    <p className="text-gray-500">"Bilgisayarım" butonuna tıkla.</p>
+                    <p className="elion-muted">&quot;Bilgisayarım&quot; ile başla.</p>
                 )}
 
-                {/* Klasörler */}
                 {dizinler.length > 0 && (
-                    <div className="mb-4">
-                        <p className="text-gray-400 text-sm mb-2">📂 Klasörler ({dizinler.length})</p>
-                        <div className="grid grid-cols-3 gap-2">
+                    <div style={{ marginBottom: "1rem" }}>
+                        <p className="elion-muted" style={{ marginBottom: "0.5rem" }}>
+                            Klasörler ({dizinler.length})
+                        </p>
+                        <div className="grid-files">
                             {dizinler.map((d, i) => (
                                 <button
                                     key={i}
+                                    type="button"
+                                    className="elion-btn elion-btn--muted"
+                                    style={{ justifyContent: "flex-start", textAlign: "left" }}
                                     onClick={() => dizinAc(d.yol)}
-                                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 text-left transition"
                                 >
-                                    <span>📂</span>
-                                    <span className="text-white text-sm truncate">{d.ad}</span>
+                                    📂 <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{d.ad}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Dosyalar */}
                 {dosyalar.length > 0 && (
                     <div>
-                        <p className="text-gray-400 text-sm mb-2">📄 Dosyalar ({dosyalar.length})</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <p className="elion-muted" style={{ marginBottom: "0.5rem" }}>
+                            Dosyalar ({dosyalar.length})
+                        </p>
+                        <div className="grid-files">
                             {dosyalar.map((d, i) => (
                                 <button
                                     key={i}
+                                    type="button"
+                                    className="elion-btn elion-btn--muted"
+                                    style={{ justifyContent: "flex-start", textAlign: "left" }}
                                     onClick={() => dosyaAc(d.yol)}
-                                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 text-left transition"
                                 >
-                                    <span>📄</span>
-                                    <span className="text-white text-sm truncate">{d.ad}</span>
+                                    📄 <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{d.ad}</span>
                                 </button>
                             ))}
                         </div>

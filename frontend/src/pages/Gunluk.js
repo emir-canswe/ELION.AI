@@ -11,59 +11,48 @@ function Gunluk() {
     }, []);
 
     const gunlukleriGetir = () => {
-        axios.get(`${API_BASE}/gunluk`)
-            .then(r => setGunlukler(r.data))
-            .catch(e => console.error(e));
+        axios
+            .get(`${API_BASE}/gunluk`)
+            .then((r) => setGunlukler(r.data))
+            .catch((e) => console.error(e));
     };
 
     const gunlukEkle = () => {
         if (!metin.trim()) return;
-        axios.post(`${API_BASE}/gunluk`, { metin })
-            .then(() => {
-                setMetin("");
-                gunlukleriGetir();
-            });
+        axios.post(`${API_BASE}/gunluk`, { metin }).then(() => {
+            setMetin("");
+            gunlukleriGetir();
+        });
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">📖 Günlük</h2>
-            <p className="text-gray-400 mb-8">Günlük notlarını yaz ve görüntüle.</p>
+        <div className="elion-page">
+            <h2 className="elion-page-title">Günlük</h2>
+            <p className="elion-lead">Günlük notlarını yaz ve görüntüle.</p>
 
-            {/* Günlük Yaz */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Bugünkü Notun</h3>
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Bugünkü not</h3>
                 <textarea
-                    value={metin}
-                    onChange={e => setMetin(e.target.value)}
-                    placeholder="Bugün neler oldu?"
+                    className="elion-textarea"
                     rows={5}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
+                    value={metin}
+                    onChange={(e) => setMetin(e.target.value)}
+                    placeholder="Bugün neler oldu?"
                 />
-                <button
-                    onClick={gunlukEkle}
-                    className="mt-3 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition"
-                >
+                <button type="button" className="elion-btn" style={{ marginTop: "0.75rem" }} onClick={gunlukEkle}>
                     Kaydet
                 </button>
             </div>
 
-            {/* Günlük Listesi */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                    Geçmiş Notlar ({gunlukler.length})
-                </h3>
-                <div className="space-y-3">
-                    {gunlukler.length === 0 && (
-                        <p className="text-gray-500">Henüz not eklenmemiş.</p>
-                    )}
-                    {gunlukler.map((g) => (
-                        <div key={g.id} className="bg-gray-800 rounded-lg px-4 py-4">
-                            <p className="text-green-400 text-sm mb-2">📅 {g.tarih}</p>
-                            <p className="text-white">{g.metin}</p>
-                        </div>
-                    ))}
-                </div>
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Geçmiş ({gunlukler.length})</h3>
+                {gunlukler.length === 0 && <p className="elion-muted">Henüz not yok.</p>}
+                {gunlukler.map((g) => (
+                    <div key={g.id} className="elion-list-item" style={{ flexDirection: "column", alignItems: "stretch" }}>
+                        <p style={{ color: "#7dffc4", fontSize: "0.82rem", margin: 0 }}>{g.tarih}</p>
+                        <p style={{ color: "var(--text-main)", margin: "0.35rem 0 0" }}>{g.metin}</p>
+                    </div>
+                ))}
             </div>
         </div>
     );

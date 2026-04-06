@@ -12,84 +12,82 @@ function Hatirlatmalar() {
     }, []);
 
     const hatirlatmalariGetir = () => {
-        axios.get(`${API_BASE}/hatirlatmalar`)
-            .then(r => setHatirlatmalar(r.data))
-            .catch(e => console.error(e));
+        axios
+            .get(`${API_BASE}/hatirlatmalar`)
+            .then((r) => setHatirlatmalar(r.data))
+            .catch((e) => console.error(e));
     };
 
     const hatirlatmaEkle = () => {
         if (!metin.trim() || !tarih) return;
         const tarihDuzenlenmis = tarih.replace("T", " ").slice(0, 16);
-        axios.post(`${API_BASE}/hatirlatmalar`, {
-            metin,
-            tarih_saat: tarihDuzenlenmis
-        }).then(() => {
-            setMetin("");
-            setTarih("");
-            hatirlatmalariGetir();
-        });
+        axios
+            .post(`${API_BASE}/hatirlatmalar`, {
+                metin,
+                tarih_saat: tarihDuzenlenmis,
+            })
+            .then(() => {
+                setMetin("");
+                setTarih("");
+                hatirlatmalariGetir();
+            });
     };
 
     const hatirlatmaSil = (id) => {
-        axios.delete(`${API_BASE}/hatirlatmalar/${id}`)
-            .then(() => hatirlatmalariGetir());
+        axios.delete(`${API_BASE}/hatirlatmalar/${id}`).then(() => hatirlatmalariGetir());
     };
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">⏰ Hatırlatmalar</h2>
-            <p className="text-gray-400 mb-8">Hatırlatmalarını yönet.</p>
+        <div className="elion-page">
+            <h2 className="elion-page-title">Hatırlatmalar</h2>
+            <p className="elion-lead">Hatırlatmalarını yönet.</p>
 
-            {/* Hatırlatma Ekle */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Hatırlatma Ekle</h3>
-                <div className="space-y-3">
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Hatırlatma ekle</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                     <input
                         type="text"
+                        className="elion-input"
                         value={metin}
-                        onChange={e => setMetin(e.target.value)}
+                        onChange={(e) => setMetin(e.target.value)}
                         placeholder="Ne hatırlatayım?"
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500"
                     />
                     <input
                         type="datetime-local"
+                        className="elion-input"
                         value={tarih}
-                        onChange={e => setTarih(e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-yellow-500"
+                        onChange={(e) => setTarih(e.target.value)}
                     />
-                    <button
-                        onClick={hatirlatmaEkle}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-2 rounded-lg transition"
-                    >
+                    <button type="button" className="elion-btn" onClick={hatirlatmaEkle}>
                         Ekle
                     </button>
                 </div>
             </div>
 
-            {/* Hatırlatma Listesi */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                    Hatırlatmalar ({hatirlatmalar.length})
-                </h3>
-                <div className="space-y-2">
-                    {hatirlatmalar.length === 0 && (
-                        <p className="text-gray-500">Henüz hatırlatma eklenmemiş.</p>
-                    )}
-                    {hatirlatmalar.map((h) => (
-                        <div key={h.id} className="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3">
-                            <div>
-                                <p className="text-white">{h.metin}</p>
-                                <p className="text-yellow-400 text-sm">{h.tarih_saat}</p>
-                            </div>
-                            <button
-                                onClick={() => hatirlatmaSil(h.id)}
-                                className="text-red-400 hover:text-red-300 transition ml-4"
-                            >
-                                🗑️
-                            </button>
+            <div className="elion-card">
+                <h3 className="elion-card-title-neutral">Liste ({hatirlatmalar.length})</h3>
+                {hatirlatmalar.length === 0 && <p className="elion-muted">Henüz hatırlatma yok.</p>}
+                {hatirlatmalar.map((h) => (
+                    <div
+                        key={h.id}
+                        className="elion-list-item"
+                        style={{ justifyContent: "space-between" }}
+                    >
+                        <div>
+                            <p style={{ color: "var(--text-main)", margin: 0 }}>{h.metin}</p>
+                            <p style={{ color: "#e0c46c", fontSize: "0.85rem", margin: "0.25rem 0 0" }}>{h.tarih_saat}</p>
                         </div>
-                    ))}
-                </div>
+                        <button
+                            type="button"
+                            className="elion-btn elion-btn--danger"
+                            style={{ padding: "0.4rem 0.75rem" }}
+                            onClick={() => hatirlatmaSil(h.id)}
+                            aria-label="Sil"
+                        >
+                            🗑️
+                        </button>
+                    </div>
+                ))}
             </div>
         </div>
     );
