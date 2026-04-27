@@ -24,21 +24,72 @@ const KOMUTLAR = {
     durdur: ["dur", "kapat", "bitir", "görüşürüz", "hoşça kal", "bay bay", "kapatıyorum", "çıkış"],
     yardim: ["yardım et", "ne yapabilirsin", "komutlar neler", "neler yapabilirsin", "yardım"],
     sans: ["şansımı dene", "rastgele bir şey söyle", "beni şaşırt"],
+    uygulama: ["uygulama aç", "hesap makinesi", "chrome aç", "uygulamayı aç", "not defteri"],
+    sistem: ["bilgisayarı kapat", "bilgisayarı yeniden başlat", "ekranı kilitle", "bilgisayarı kilitle"],
+    indirilenler: ["indirilenler", "indirilenleri aç", "indirilenlere gir", "indirmeler"],
+    masaustu: ["masaüstü", "masaüstünü aç", "masaüstüne git"],
+    belgeler: ["belgeler", "belgeleri aç", "belgelere gir"],
+};
+
+const turkceKarakterTemizle = (metin) => {
+    return metin
+        .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
+        .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
+        .replace(/[^a-z0-9\s]/g, "");
 };
 
 const tumKomutlar = Object.entries(KOMUTLAR).flatMap(([kategori, kelimeler]) =>
-    kelimeler.map(kelime => ({ kategori, kelime }))
+    kelimeler.map(kelime => ({ 
+        kategori, 
+        kelime,
+        temizKelime: turkceKarakterTemizle(kelime.toLowerCase())
+    }))
 );
 
 const fuse = new Fuse(tumKomutlar, {
-    keys: ["kelime"],
-    threshold: 0.4,
+    keys: ["temizKelime", "kelime"],
+    includeScore: true,
+    threshold: 0.5,
+    ignoreLocation: true,
     distance: 100,
 });
 
 function komutBul(ses) {
-    const sonuc = fuse.search(ses);
-    if (sonuc.length > 0) return sonuc[0].item.kategori;
+    const temizSes = turkceKarakterTemizle(ses);
+    
+    // 1. Tam cümle araması
+    let sonuc = fuse.search(temizSes);
+    if (sonuc.length > 0 && sonuc[0].score <= 0.4) {
+        return sonuc[0].item.kategori;
+    }
+
+    // 2. Parçalı arama (1 ve 2 kelimelik bloklar ile cümle içinden yakalama)
+    const kelimeler = temizSes.split(" ").filter(k => k.trim().length > 0);
+    let enIyiKategori = null;
+    let enIyiSkor = 1;
+
+    for (let i = 0; i < kelimeler.length; i++) {
+        // İkili kelime eşleşmesi (Örn: "filmm oner")
+        if (i < kelimeler.length - 1) {
+            let res2 = fuse.search(kelimeler[i] + " " + kelimeler[i + 1]);
+            if (res2.length > 0 && res2[0].score < enIyiSkor) {
+                enIyiSkor = res2[0].score;
+                enIyiKategori = res2[0].item.kategori;
+            }
+        }
+        // Tek kelime eşleşmesi (Örn: "whatsapp")
+        let res1 = fuse.search(kelimeler[i]);
+        if (res1.length > 0 && res1[0].score < enIyiSkor) {
+            enIyiSkor = res1[0].score;
+            enIyiKategori = res1[0].item.kategori;
+        }
+    }
+
+    // 0.45 altı skorları (düşük skor = yüksek benzerlik) kabul et
+    if (enIyiKategori && enIyiSkor <= 0.45) {
+        return enIyiKategori;
+    }
+
     return null;
 }
 
@@ -80,8 +131,19 @@ export default function Dashboard() {
         logSonuRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [loglar]);
 
+    // Uygulama açıldığında geçmiş sohbetleri yükle
+    useEffect(() => {
+        axios.get(`${API_BASE}/sohbet`).then(res => {
+            if (res.data && res.data.length > 0) {
+                setLoglar(res.data);
+            }
+        }).catch(err => console.log("Sohbet yüklenemedi", err));
+    }, []);
+
     const logEkle = (kimden, mesaj) => {
-        setLoglar(prev => [...prev, { kimden, mesaj, zaman: new Date().toLocaleTimeString() }]);
+        const zaman = new Date().toLocaleTimeString();
+        setLoglar(prev => [...prev, { kimden, mesaj, zaman }]);
+        axios.post(`${API_BASE}/sohbet`, { kimden, mesaj }).catch(e => console.log("Sohbet kaydedilemedi"));
     };
 
     const elioniBaslat = () => {
@@ -98,6 +160,9 @@ export default function Dashboard() {
         if (mod === "hatirlatma") { await hatirlatmaAdim(ses); return; }
         if (mod === "whatsapp") { await whatsappAdim(ses); return; }
         if (mod === "gunluk") { await gunlukAdim(ses); return; }
+        if (mod === "dosya") { await dosyaAdim(ses); return; }
+        if (mod === "uygulama") { await uygulamaAdim(ses); return; }
+        if (mod === "sistem") { await sistemAdim(ses); return; }
         if (mod === "film_onayi") {
             if (ses.includes("evet") || ses.includes("aç")) {
                 const url = "https://www.google.com/search?q=" + geciciVeri.filmAd.replace(/ /g, "+") + "+izle";
@@ -145,8 +210,13 @@ export default function Dashboard() {
                                                                         KOMUTLAR.whatsapp.some(k => ses.includes(k)) ? "whatsapp" :
                                                                             KOMUTLAR.gunluk.some(k => ses.includes(k)) ? "gunluk" :
                                                                                 KOMUTLAR.dosya.some(k => ses.includes(k)) ? "dosya" :
-                                                                                    KOMUTLAR.durdur.some(k => ses.includes(k)) ? "durdur" :
-                                                                                        komutBul(ses); // Tam eşleşme yoksa fuzzy dene
+                                                                                    KOMUTLAR.indirilenler.some(k => ses.includes(k)) ? "indirilenler" :
+                                                                                        KOMUTLAR.masaustu.some(k => ses.includes(k)) ? "masaustu" :
+                                                                                            KOMUTLAR.belgeler.some(k => ses.includes(k)) ? "belgeler" :
+                                                                                                KOMUTLAR.uygulama.some(k => ses.includes(k)) ? "uygulama" :
+                                                                                                    KOMUTLAR.sistem.some(k => ses.includes(k)) ? "sistem" :
+                                                                                                        KOMUTLAR.durdur.some(k => ses.includes(k)) ? "durdur" :
+                                                                                                            komutBul(ses); // Tam eşleşme yoksa fuzzy dene
 
         if (kategori === "selamlama") {
             const cevap = rastgele([
@@ -346,11 +416,57 @@ export default function Dashboard() {
 
         } else if (kategori === "dosya") {
             const cevap = rastgele([
-                "Dosya gezginini açıyorum efendim.",
-                "Hemen dosyalara bakıyorum efendim.",
-                "Dosya sayfasına yönlendiriyorum efendim."
+                "Hangi dizini veya klasörü açmamı istersiniz efendim?",
+                "Tabii efendim, bilgisayardaki hangi konumu açayım?",
+                "Söyleyin efendim, hangi sürücüye veya klasöre girelim?"
             ]);
             konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+            setMod("dosya");
+
+        } else if (kategori === "indirilenler") {
+            try {
+                await axios.post(`${API_BASE}/dosya-ac`, { yol: "downloads" });
+                const cevap = rastgele(["İndirilenler klasörünü açtım efendim.", "Hemen indirilenleri açıyorum.", "İndirilenler klasörü karşınızda efendim."]);
+                konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+            } catch {
+                konusmaSentezi("Klasörü açarken bir hata oluştu efendim."); logEkle("🤖 Elion", "Hata: Klasör açılamadı.");
+            }
+
+        } else if (kategori === "masaustu") {
+            try {
+                await axios.post(`${API_BASE}/dosya-ac`, { yol: "desktop" });
+                const cevap = rastgele(["Masaüstü klasörünü açtım efendim.", "Hemen masaüstünü açıyorum.", "Masaüstü klasörü karşınızda efendim."]);
+                konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+            } catch {
+                konusmaSentezi("Klasörü açarken bir hata oluştu efendim."); logEkle("🤖 Elion", "Hata: Klasör açılamadı.");
+            }
+
+        } else if (kategori === "belgeler") {
+            try {
+                await axios.post(`${API_BASE}/dosya-ac`, { yol: "documents" });
+                const cevap = rastgele(["Belgeler klasörünü açtım efendim.", "Hemen belgeleri açıyorum.", "Belgeler klasörü karşınızda efendim."]);
+                konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+            } catch {
+                konusmaSentezi("Klasörü açarken bir hata oluştu efendim."); logEkle("🤖 Elion", "Hata: Klasör açılamadı.");
+            }
+
+        } else if (kategori === "uygulama") {
+            if (ses.includes("hesap") || ses.includes("chrome") || ses.includes("not defteri")) {
+                uygulamaAdim(ses);
+            } else {
+                const cevap = rastgele(["Hangi uygulamayı açmamı istersiniz efendim?", "Tabii, hangi programı çalıştırayım?"]);
+                konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+                setMod("uygulama");
+            }
+
+        } else if (kategori === "sistem") {
+            if (ses.includes("kapat") || ses.includes("kilitle") || ses.includes("yeniden")) {
+                sistemAdim(ses);
+            } else {
+                const cevap = rastgele(["Sistem komutu algılandı. Ne yapmamı istersiniz efendim?", "Sistem kontrolü devrede. Ne istersiniz?"]);
+                konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+                setMod("sistem");
+            }
 
         } else if (kategori === "durdur") {
             const cevap = rastgele([
@@ -430,6 +546,41 @@ export default function Dashboard() {
         setMod(null);
     };
 
+    const uygulamaAdim = async (ses) => {
+        try {
+            await axios.post(`${API_BASE}/uygulama-ac`, { yol: ses });
+            const cevap = rastgele(["Uygulamayı açıyorum efendim.", "Hemen başlatıyorum.", "Program karşınızda efendim."]);
+            konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+        } catch {
+            konusmaSentezi("Bu uygulamayı başlatamadım efendim.");
+            logEkle("🤖 Elion", "Hata: Uygulama başlatılamadı.");
+        }
+        setMod(null);
+    };
+
+    const sistemAdim = async (ses) => {
+        try {
+            const res = await axios.post(`${API_BASE}/sistem`, { yol: ses });
+            konusmaSentezi(res.data.mesaj); logEkle("🤖 Elion", res.data.mesaj);
+        } catch {
+            konusmaSentezi("Bu sistem komutunu uygulayamadım efendim.");
+            logEkle("🤖 Elion", "Hata: Sistem komutu başarısız.");
+        }
+        setMod(null);
+    };
+
+    const dosyaAdim = async (ses) => {
+        try {
+            await axios.post(`${API_BASE}/dosya-ac`, { yol: ses });
+            const cevap = rastgele(["İstediğiniz konumu açtım efendim.", "Hemen açıyorum.", "Klasör karşınızda efendim."]);
+            konusmaSentezi(cevap); logEkle("🤖 Elion", cevap);
+        } catch {
+            konusmaSentezi("Bu isimde bir konum bulamadım efendim. Doğru söylediğinize emin misiniz?");
+            logEkle("🤖 Elion", "Hata: Dizin veya konum bulunamadı.");
+        }
+        setMod(null);
+    };
+
     const dinlemeBaslat = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) { alert("Chrome kullanın."); return; }
@@ -479,172 +630,147 @@ export default function Dashboard() {
         setMod(null);
         setAltAdim(null);
         setGeciciVeri({});
+        axios.delete(`${API_BASE}/sohbet`).catch(e => console.log("Sohbet temizlenemedi"));
     };
 
     if (!baslatildi) {
-        return (
-            <div className="elion-dash-root elion-dash-root--clean">
-                <div className="elion-dash-centered">
-                    <div className="elion-ai-hero elion-ai-hero--tight">
-                        <AiAvatar listening={false} />
-                        <div className="elion-speech elion-glass elion-speech--clean">
-                            <div className="elion-speech__head">
-                                <span className="elion-speech__title">Assistant</span>
-                                <span className="elion-online-badge elion-online-badge--off">
-                                    <i className="fas fa-circle" /> Beklemede
-                                </span>
-                            </div>
-                            <p className="elion-speech__sub">Elion · kişisel yapay zeka</p>
-                            <p className="elion-speech__body">
-                                Mikrofon düğmesine basarak başlat.
-                            </p>
-                        </div>
-                    </div>
-                    <div className={`ai-core-container ai-core-container--clean${dinliyor ? " is-listening" : ""}`}>
-                        <div className="ring ring-1" />
-                        <div className="ring ring-2" />
-                        <div className="ring ring-3" />
-                        <div className="pulse-layer" />
-                        <div className="pulse-layer" />
-                        <div className="pulse-layer" />
-                        <button type="button" className="mic-button" onClick={micClick}>
-                            <i className="fas fa-microphone" aria-hidden />
-                            <span>BAŞLAT</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+        // Automatically start in the background when the app loads
+        // We still keep the 'baslatildi' state to prevent re-triggering greetings
     }
 
     return (
-        <div className="elion-dash-root elion-dash-root--clean">
-            <div className="elion-dash-centered">
-                <div className="elion-dash-inline-tools">
-                    <span className={`elion-pill${dinliyor ? " elion-pill--live" : ""}`}>
-                        {dinliyor ? "canlı" : "hazır"}
-                    </span>
-                    <button type="button" className="elion-btn-ghost elion-btn-ghost--small" onClick={resetElion}>
-                        Oturumu kapat
-                    </button>
+        <div className="flex flex-col h-screen bg-[#212121] text-gray-200 font-sans relative">
+            {/* Ust Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shadow-sm">
+                <div className="font-semibold text-xl tracking-wide flex items-center space-x-3">
+                    <span className="text-cyan-400"><i className="fas fa-bolt"></i></span>
+                    <span>Elion AI</span>
                 </div>
-
-                <div className="elion-ai-hero elion-ai-hero--tight">
-                    <AiAvatar listening={dinliyor} />
-                    <div className="elion-speech elion-glass elion-speech--clean">
-                        <div className="elion-speech__head">
-                            <span className="elion-speech__title">Assistant</span>
-                            <span className={`elion-online-badge ${dinliyor ? "elion-online-badge--live" : ""}`}>
-                                <i className="fas fa-circle" />
-                                {dinliyor ? "Çevrimiçi" : "Hazır"}
-                            </span>
-                        </div>
-                        <p className="elion-speech__sub">Elion · kişisel yapay zeka</p>
-                        <p className={`elion-speech__body ${dinliyor ? "elion-speech__body--live" : ""}`}>{durum}</p>
-                        {mod && (
-                            <p className="elion-mode-line elion-mode-line--clean">
-                                {mod}
-                                {altAdim ? ` · ${altAdim}` : ""}
-                            </p>
+                <div className="flex items-center space-x-4">
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full border transition-all ${dinliyor ? 'bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'bg-gray-800 text-gray-400 border-white/5'}`}>
+                        {dinliyor ? (
+                            <><i className="fas fa-circle animate-pulse mr-2 text-[10px]"></i> Dinliyor...</>
+                        ) : (
+                            <><i className="fas fa-check-circle mr-2 text-[10px]"></i> Hazır</>
                         )}
-                    </div>
-                </div>
-
-                <div className={`ai-core-container ai-core-container--clean${dinliyor ? " is-listening" : ""}`}>
-                    <div className="ring ring-1" />
-                    <div className="ring ring-2" />
-                    <div className="ring ring-3" />
-                    <div className="pulse-layer" />
-                    <div className="pulse-layer" />
-                    <div className="pulse-layer" />
-                    <button
-                        type="button"
-                        className={`mic-button${dinliyor ? " listening" : ""}`}
-                        onClick={micClick}
-                    >
-                        <i className="fas fa-microphone" aria-hidden />
-                        <span>{dinliyor ? "DURDUR" : "DİNLE"}</span>
+                    </span>
+                    <button onClick={resetElion} className="text-gray-400 hover:text-white transition-colors" title="Sohbeti Temizle">
+                        <i className="fas fa-redo"></i>
                     </button>
                 </div>
             </div>
 
-            <div className="elion-dash-unified elion-glass">
-                <section className="elion-dash-unified__section">
-                    <h4 className="elion-panel-title">Konuşma</h4>
-                    <div className="elion-log-scroll elion-log-scroll--clean">
-                        {loglar.length === 0 && <p className="elion-muted">Henüz kayıt yok.</p>}
-                        {loglar.map((l, i) => {
-                            const user = l.kimden.includes("Sen");
-                            return (
-                                <div
-                                    key={i}
-                                    className={`elion-log-bubble ${user ? "elion-log-bubble--user" : "elion-log-bubble--elion"}`}
+            {/* Orta Alan: Sohbet Gecmisi veya Bos Durum */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-10 md:px-20 lg:px-40 xl:px-60 pb-40 pt-10 scroll-smooth">
+                {loglar.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center animate-fade-in mt-12">
+                        <div className="mb-8 transform scale-[1.35] opacity-90 drop-shadow-2xl">
+                            <AiAvatar listening={dinliyor} />
+                        </div>
+                        <h1 className="text-3xl sm:text-4xl font-semibold mb-12 text-center text-white tracking-tight">Size nasıl yardımcı olabilirim?</h1>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+                            {[
+                                { title: "Film öner", sub: "Günün yorgunluğunu atacak bir film", icon: "fa-film" },
+                                { title: "Kitap öner", sub: "Okunacaklar listene yeni bir eser", icon: "fa-book" },
+                                { title: "Hatırlatma kur", sub: "Önemli işlerini senin yerine ben takip edeyim", icon: "fa-bell" },
+                                { title: "Beni şaşırt", sub: "Gününe renk katacak bir söz", icon: "fa-magic" }
+                            ].map((s, i) => (
+                                <button 
+                                    key={i} 
+                                    onClick={() => komutIsle(s.title.toLowerCase())}
+                                    className="group flex flex-col items-start p-5 bg-gray-800/40 hover:bg-gray-700/60 border border-white/5 rounded-2xl transition-all duration-300 text-left hover:shadow-lg"
                                 >
-                                    <div className="elion-log-meta">
-                                        {l.kimden} · {l.zaman}
+                                    <div className="flex items-center space-x-3 mb-2">
+                                        <i className={`fas ${s.icon} text-cyan-400 opacity-80 group-hover:opacity-100 transition-opacity`}></i>
+                                        <span className="font-semibold text-gray-200 group-hover:text-white">{s.title}</span>
                                     </div>
-                                    {l.mesaj}
+                                    <span className="text-sm text-gray-400/80 group-hover:text-gray-300">{s.sub}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col space-y-8">
+                        {loglar.map((l, i) => {
+                            const isUser = l.kimden.includes("Sen");
+                            return (
+                                <div key={i} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+                                    {!isUser && (
+                                        <div className="w-8 h-8 rounded-full bg-cyan-900 flex items-center justify-center mr-3 mt-1 shrink-0 border border-cyan-500/30">
+                                            <i className="fas fa-robot text-cyan-400 text-xs"></i>
+                                        </div>
+                                    )}
+                                    <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 ${isUser ? 'bg-gray-700 text-white rounded-br-sm' : 'bg-transparent text-gray-100'}`}>
+                                        <div className="leading-relaxed whitespace-pre-wrap text-[15px]">{l.mesaj}</div>
+                                    </div>
+                                    {isUser && (
+                                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center ml-3 mt-1 shrink-0">
+                                            <i className="fas fa-user text-gray-300 text-xs"></i>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
                         <div ref={logSonuRef} />
                     </div>
-                </section>
+                )}
+            </div>
 
-                <div className="elion-dash-unified__divider" />
-
-                <section className="elion-dash-unified__section">
-                    <h4 className="elion-panel-title">Metin komutu</h4>
-                    <div className="elion-row-input">
-                        <input
-                            type="text"
-                            className="elion-input"
-                            style={{ flex: 1 }}
-                            value={yazilan}
-                            onChange={(e) => setYazilan(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && klavyeGonder()}
-                            placeholder="Yaz ve Enter…"
-                        />
-                        <button type="button" className="elion-btn" onClick={klavyeGonder}>
-                            <i className="fas fa-paper-plane" aria-hidden />
-                        </button>
-                    </div>
-                </section>
-
-                <div className="elion-dash-unified__divider" />
-
-                <section className="elion-dash-unified__section">
-                    <button
-                        type="button"
-                        className="elion-cmd-toggle"
-                        onClick={() => setKomutlarAcik((k) => !k)}
-                    >
-                        <i className="fas fa-lightbulb" aria-hidden />
-                        Komut örnekleri {komutlarAcik ? "▲" : "▼"}
-                    </button>
-                    {komutlarAcik && (
-                        <div className="elion-cmd-grid elion-cmd-grid--clean">
-                            {[
-                                "Film öner",
-                                "Kitap öner",
-                                "Hatırlatma ekle",
-                                "Mesaj gönder",
-                                "Google'da ara",
-                                "YouTube aç",
-                                "Dosyaları aç",
-                                "Günlük yaz",
-                                "Merhaba",
-                                "Saat kaç",
-                                "Bugün ne günü",
-                                "Beni şaşırt",
-                            ].map((k, i) => (
-                                <div key={i} className="elion-cmd-chip">
-                                    {k}
-                                </div>
-                            ))}
+            {/* Alt Alan: Chat Input */}
+            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#212121] via-[#212121] to-transparent pt-16 pb-8 px-4">
+                <div className="max-w-4xl mx-auto relative flex flex-col items-center">
+                    {mod && (
+                        <div className="mb-4 text-cyan-400 text-sm bg-cyan-900/40 px-4 py-1.5 rounded-full border border-cyan-500/20 shadow-lg backdrop-blur-sm flex items-center space-x-2">
+                            <i className="fas fa-cog spin-slow"></i>
+                            <span>Mod: <strong>{mod}</strong> {altAdim ? `(${altAdim})` : ''}</span>
                         </div>
                     )}
-                </section>
+                    
+                    <div className="w-full flex items-center space-x-4">
+                        {/* Huge Voice Button */}
+                        <button 
+                            type="button" 
+                            onClick={micClick}
+                            className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform shadow-2xl border-2 ${
+                                dinliyor 
+                                ? 'bg-red-500 text-white border-red-400 scale-110 shadow-[0_0_30px_rgba(239,68,68,0.6)] animate-pulse' 
+                                : 'bg-cyan-600 text-white border-cyan-500 hover:bg-cyan-500 hover:scale-105 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                            }`}
+                            title={dinliyor ? "Dinlemeyi Durdur" : "Mikrofonla Konuş"}
+                        >
+                            <i className={`fas fa-microphone ${dinliyor ? 'text-2xl' : 'text-xl'}`}></i>
+                        </button>
+                        
+                        {/* Text Input Pill */}
+                        <div className="flex-1 flex items-center bg-[#2f2f2f] border border-white/10 rounded-full p-1.5 shadow-2xl focus-within:border-cyan-500/50 focus-within:bg-[#383838] transition-all">
+                            <input
+                                type="text"
+                                className="flex-1 bg-transparent text-white px-5 py-3 outline-none text-base placeholder-gray-400"
+                                placeholder="Elion'a yazılı mesaj gönder..."
+                                value={yazilan}
+                                onChange={(e) => setYazilan(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && klavyeGonder()}
+                            />
+                            
+                            <button 
+                                type="button" 
+                                onClick={klavyeGonder}
+                                disabled={!yazilan.trim()}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all mr-1 ${
+                                    !yazilan.trim() 
+                                    ? 'text-gray-500 bg-transparent' 
+                                    : 'bg-white text-black hover:bg-gray-200 shadow-md transform hover:scale-105'
+                                }`}
+                            >
+                                <i className="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div className="text-center text-[12px] text-gray-500 mt-5 tracking-wide">
+                        Elion AI hata yapabilir. Önemli bilgileri kontrol etmeyi unutmayın.
+                    </div>
+                </div>
             </div>
         </div>
     );

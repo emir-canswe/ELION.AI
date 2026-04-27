@@ -1,7 +1,36 @@
 /** Referans görseldeki kulaklıklı asistan silüeti — neon glow */
 export default function AiAvatar({ listening }) {
     return (
-        <div className={`elion-ai-avatar ${listening ? "elion-ai-avatar--pulse" : ""}`} aria-hidden>
+        <div className={`elion-ai-avatar relative inline-block ${listening ? "elion-ai-avatar--pulse" : ""}`} aria-hidden>
+            <style>{`
+                @keyframes floatHead {
+                    0%, 100% { transform: translateY(0px) rotate(0deg); }
+                    50% { transform: translateY(-10px) rotate(1deg); }
+                }
+                @keyframes blink {
+                    0%, 96%, 100% { transform: scaleY(1); }
+                    98% { transform: scaleY(0.1); }
+                }
+                @keyframes mouthTalk {
+                    0%, 100% { transform: scaleY(1); }
+                    50% { transform: scaleY(1.3); }
+                }
+                .anim-head {
+                    animation: floatHead 4s ease-in-out infinite;
+                    transform-origin: 110px 118px;
+                }
+                .anim-eyes {
+                    animation: blink 4s infinite;
+                    transform-origin: 110px 112px;
+                }
+                .anim-mouth {
+                    transition: all 0.3s ease;
+                    transform-origin: 110px 145px;
+                }
+                .anim-mouth-talk {
+                    animation: mouthTalk 0.4s infinite alternate;
+                }
+            `}</style>
             <svg
                 className="elion-ai-avatar__svg"
                 viewBox="0 0 220 260"
@@ -21,62 +50,8 @@ export default function AiAvatar({ listening }) {
                         <stop offset="100%" stopColor="#0088ff" stopOpacity="0.65" />
                     </linearGradient>
                 </defs>
-                {/* Kulaklık bandı */}
-                <path
-                    d="M 38 95 C 38 45 78 18 110 18 C 142 18 182 45 182 95"
-                    stroke="url(#elionAvatarGrad)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    fill="none"
-                    filter="url(#elionAvatarGlow)"
-                    opacity="0.9"
-                />
-                {/* Sol kulaklık */}
-                <rect
-                    x="28"
-                    y="88"
-                    rx="14"
-                    width="34"
-                    height="72"
-                    fill="rgba(0, 240, 255, 0.12)"
-                    stroke="#00f0ff"
-                    strokeWidth="2"
-                />
-                {/* Sağ kulaklık */}
-                <rect
-                    x="158"
-                    y="88"
-                    rx="14"
-                    width="34"
-                    height="72"
-                    fill="rgba(0, 240, 255, 0.12)"
-                    stroke="#00f0ff"
-                    strokeWidth="2"
-                />
-                {/* Yüz */}
-                <ellipse
-                    cx="110"
-                    cy="118"
-                    rx="48"
-                    ry="54"
-                    fill="rgba(0, 40, 55, 0.5)"
-                    stroke="url(#elionAvatarGrad)"
-                    strokeWidth="2.5"
-                    filter="url(#elionAvatarGlow)"
-                />
-                {/* Gözler */}
-                <ellipse cx="88" cy="112" rx="8" ry="10" fill="#00f0ff" opacity="0.85" />
-                <ellipse cx="132" cy="112" rx="8" ry="10" fill="#00f0ff" opacity="0.85" />
-                {/* Gülümseme */}
-                <path
-                    d="M 78 138 Q 110 162 142 138"
-                    stroke="#00f0ff"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    fill="none"
-                    opacity="0.75"
-                />
-                {/* Gövde */}
+
+                {/* Gövde (sabit) */}
                 <path
                     d="M 70 175 L 70 230 Q 110 252 150 230 L 150 175 Q 110 188 70 175 Z"
                     fill="rgba(0, 60, 80, 0.35)"
@@ -84,6 +59,68 @@ export default function AiAvatar({ listening }) {
                     strokeWidth="2"
                     opacity="0.95"
                 />
+
+                {/* Kafa Grubu (Hareketli) */}
+                <g className="anim-head">
+                    {/* Kulaklık bandı */}
+                    <path
+                        d="M 38 95 C 38 45 78 18 110 18 C 142 18 182 45 182 95"
+                        stroke="url(#elionAvatarGrad)"
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                        fill="none"
+                        filter="url(#elionAvatarGlow)"
+                        opacity="0.9"
+                    />
+                    {/* Sol kulaklık */}
+                    <rect
+                        x="28"
+                        y="88"
+                        rx="14"
+                        width="34"
+                        height="72"
+                        fill="rgba(0, 240, 255, 0.12)"
+                        stroke="#00f0ff"
+                        strokeWidth="2"
+                    />
+                    {/* Sağ kulaklık */}
+                    <rect
+                        x="158"
+                        y="88"
+                        rx="14"
+                        width="34"
+                        height="72"
+                        fill="rgba(0, 240, 255, 0.12)"
+                        stroke="#00f0ff"
+                        strokeWidth="2"
+                    />
+                    {/* Yüz */}
+                    <ellipse
+                        cx="110"
+                        cy="118"
+                        rx="48"
+                        ry="54"
+                        fill="rgba(0, 40, 55, 0.5)"
+                        stroke="url(#elionAvatarGrad)"
+                        strokeWidth="2.5"
+                        filter="url(#elionAvatarGlow)"
+                    />
+                    {/* Gözler */}
+                    <g className="anim-eyes">
+                        <ellipse cx="88" cy="112" rx="8" ry="10" fill="#00f0ff" opacity="0.85" />
+                        <ellipse cx="132" cy="112" rx="8" ry="10" fill="#00f0ff" opacity="0.85" />
+                    </g>
+                    {/* Gülümseme */}
+                    <path
+                        className={`anim-mouth ${listening ? "anim-mouth-talk" : ""}`}
+                        d="M 78 138 Q 110 162 142 138"
+                        stroke="#00f0ff"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        fill="none"
+                        opacity="0.75"
+                    />
+                </g>
             </svg>
         </div>
     );

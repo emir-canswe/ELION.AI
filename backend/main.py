@@ -2,10 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import pyodbc
+import psycopg2
 import os
 import requests
 from datetime import datetime
+import g4f
 
 load_dotenv()
 
@@ -20,13 +21,13 @@ app.add_middleware(
 )
 
 def get_db():
-    conn_str = (
-        f"Driver={os.getenv('DB_DRIVER')};"
-        f"Server={os.getenv('DB_SERVER')};"
-        f"Database={os.getenv('DB_DATABASE')};"
-        f"Trusted_Connection={os.getenv('DB_TRUSTED_CONNECTION')};"
+    return psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'),
+        port=os.getenv('DB_PORT', '5432'),
+        database=os.getenv('DB_NAME', 'elion'),
+        user=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASS', 'postgres')
     )
-    return pyodbc.connect(conn_str)
 
 # --- MODELLER ---
 class HatirlatmaEkle(BaseModel):
@@ -47,6 +48,10 @@ class DosyaYol(BaseModel):
 
 class WhatsAppMesaj(BaseModel):
     numara: str
+    mesaj: str
+
+class SohbetEkle(BaseModel):
+    kimden: str
     mesaj: str
 
 # --- SAĞLIK ---
@@ -77,7 +82,7 @@ def kitaplari_getir():
 def kitap_ekle(data: KitapEkle):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO kitaplar (ad) VALUES (?)", (data.ad,))
+    cursor.execute("INSERT INTO kitaplar (ad) VALUES (%s)", (data.ad,))
     conn.commit()
     conn.close()
     return {"success": True, "mesaj": "Kitap eklendi"}
@@ -86,7 +91,7 @@ def kitap_ekle(data: KitapEkle):
 def rastgele_kitap():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT TOP 1 * FROM kitaplar ORDER BY NEWID()")
+    cursor.execute("SELECT * FROM kitaplar ORDER BY RANDOM() LIMIT 1")
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -107,7 +112,7 @@ def filmleri_getir():
 def film_ekle(data: FilmEkle):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO filmler (ad) VALUES (?)", (data.ad,))
+    cursor.execute("INSERT INTO filmler (ad) VALUES (%s)", (data.ad,))
     conn.commit()
     conn.close()
     return {"success": True, "mesaj": "Film eklendi"}
@@ -116,7 +121,7 @@ def film_ekle(data: FilmEkle):
 def rastgele_film():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT TOP 1 * FROM filmler ORDER BY NEWID()")
+    cursor.execute("SELECT * FROM filmler ORDER BY RANDOM() LIMIT 1")
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -141,7 +146,7 @@ def hatirlatma_ekle(data: HatirlatmaEkle):
         raise HTTPException(status_code=400, detail="Tarih formatı hatalı. Örnek: 2025-05-08 14:30")
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO hatirlatmalar (metin, tarih_saat) VALUES (?, ?)", (data.metin, tarih_saat))
+    cursor.execute("INSERT INTO hatirlatmalar (metin, tarih_saat) VALUES (%s, %s)", (data.metin, tarih_saat))
     conn.commit()
     conn.close()
     return {"success": True, "mesaj": "Hatırlatma eklendi"}
@@ -150,7 +155,7 @@ def hatirlatma_ekle(data: HatirlatmaEkle):
 def hatirlatma_sil(id: int):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM hatirlatmalar WHERE id = ?", (id,))
+    cursor.execute("DELETE FROM hatirlatmalar WHERE id = %s", (id,))
     conn.commit()
     conn.close()
     return {"success": True}
@@ -170,10 +175,49 @@ def gunluk_ekle(data: GunlukEkle):
     tarih = datetime.now().date()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO gunluk (tarih, metin) VALUES (?, ?)", (tarih, data.metin))
+    cursor.execute("INSERT INTO gunluk (tarih, metin) VALUES (%s, %s)", (tarih, data.metin))
     conn.commit()
     conn.close()
     return {"success": True, "mesaj": "Günlük kaydedildi"}
+
+# --- SOHBET GEÇMİŞİ ---
+@app.get("/sohbet")
+def sohbet_getir():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM sohbet_gecmisi ORDER BY id ASC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [{"id": r[0], "kimden": r[1], "mesaj": r[2], "zaman": r[3].strftime("%H:%M") if r[3] else ""} for r in rows]
+    except Exception as e:
+        print("Sohbet getirme hatası:", e)
+        return []
+
+@app.post("/sohbet")
+def sohbet_ekle(data: SohbetEkle):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO sohbet_gecmisi (kimden, mesaj) VALUES (%s, %s)", (data.kimden, data.mesaj))
+        conn.commit()
+        conn.close()
+        return {"success": True}
+    except Exception as e:
+        print("Sohbet kaydetme hatası:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/sohbet")
+def sohbet_temizle():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM sohbet_gecmisi")
+        conn.commit()
+        conn.close()
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- DOSYA SİSTEMİ ---
 @app.get("/dosyalar")
@@ -204,8 +248,68 @@ def dizin_oku(data: DosyaYol):
 @app.post("/dosya-ac")
 def dosya_ac(data: DosyaYol):
     try:
-        os.startfile(data.yol)
-        return {"success": True, "mesaj": "Dosya açıldı"}
+        yol = data.yol.lower().strip()
+        home = os.path.expanduser('~')
+        hedef_yol = data.yol # varsayilan olarak orjinal giris
+        
+        # Ozel Windows klasorleri ve Suruculer (Turkce konusma varyasyonlari)
+        if yol in ["downloads", "indirilenler", "indirmeler"]:
+            hedef_yol = os.path.join(home, "Downloads")
+        elif yol in ["desktop", "masaüstü", "masaustu"]:
+            hedef_yol = os.path.join(home, "Desktop")
+        elif yol in ["documents", "belgeler", "belgelerim"]:
+            hedef_yol = os.path.join(home, "Documents")
+        elif yol in ["pictures", "resimler", "fotoğraflar"]:
+            hedef_yol = os.path.join(home, "Pictures")
+        elif yol in ["videos", "videolar"]:
+            hedef_yol = os.path.join(home, "Videos")
+        elif yol in ["music", "müzikler", "müzik", "sarkilar"]:
+            hedef_yol = os.path.join(home, "Music")
+        elif yol in ["c", "c dizini", "c sürücüsü", "c surucusu"]:
+            hedef_yol = "C:\\"
+        elif yol in ["d", "d dizini", "d sürücüsü", "d surucusu"]:
+            hedef_yol = "D:\\"
+        elif yol in ["e", "e dizini", "e sürücüsü", "e surucusu"]:
+            hedef_yol = "E:\\"
+            
+        if not os.path.exists(hedef_yol):
+            raise HTTPException(status_code=404, detail=f"Dizin bulunamadı: {hedef_yol}")
+            
+        os.startfile(hedef_yol)
+        return {"success": True, "mesaj": f"{hedef_yol} açıldı"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/uygulama-ac")
+def uygulama_ac(data: DosyaYol):
+    app_name = data.yol.lower()
+    try:
+        if "hesap" in app_name or "calc" in app_name:
+            os.system("calc")
+        elif "chrome" in app_name or "tarayıcı" in app_name:
+            os.system("start chrome")
+        elif "not" in app_name or "notepad" in app_name:
+            os.system("notepad")
+        else:
+            os.system(f"start {app_name}")
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/sistem")
+def sistem_komut(data: DosyaYol):
+    komut = data.yol.lower()
+    try:
+        if "kapat" in komut:
+            # os.system("shutdown /s /t 0") # Test asamasinda kapattim yanlislikla kapanmasin
+            return {"success": True, "mesaj": "Bilgisayar kapatılıyor (Test modunda devre dışı)"}
+        elif "yeniden" in komut:
+            return {"success": True, "mesaj": "Bilgisayar yeniden başlatılıyor (Test modunda devre dışı)"}
+        elif "kilitle" in komut:
+            os.system("rundll32.exe user32.dll,LockWorkStation")
+            return {"success": True, "mesaj": "Ekran kilitlendi"}
+        else:
+            return {"success": False, "mesaj": "Bilinmeyen sistem komutu."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -53,7 +53,7 @@ function startFrontend() {
 
     frontendProcess = spawn(npmCmd, ["start"], {
         cwd: frontendRoot,
-        shell: false,
+        shell: isWin,
         env: { ...process.env, BROWSER: "none", PORT: FRONTEND_PORT },
     });
     logChild("frontend", frontendProcess);

@@ -1,48 +1,51 @@
-import pyodbc
+import psycopg2
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-conn_str = (
-    f"Driver={os.getenv('DB_DRIVER')};"
-    f"Server={os.getenv('DB_SERVER')};"
-    f"Database={os.getenv('DB_DATABASE')};"
-    f"Trusted_Connection={os.getenv('DB_TRUSTED_CONNECTION')};"
+conn = psycopg2.connect(
+    host=os.getenv('DB_HOST', 'localhost'),
+    port=os.getenv('DB_PORT', '5432'),
+    database=os.getenv('DB_NAME', 'elion'),
+    user=os.getenv('DB_USER', 'postgres'),
+    password=os.getenv('DB_PASS', 'postgres')
 )
-
-conn = pyodbc.connect(conn_str)
 cursor = conn.cursor()
 
 tablolar = [
     """
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='kitaplar')
-    CREATE TABLE kitaplar (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        ad NVARCHAR(255) NOT NULL
+    CREATE TABLE IF NOT EXISTS kitaplar (
+        id SERIAL PRIMARY KEY,
+        ad VARCHAR(255) NOT NULL
     )
     """,
     """
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='filmler')
-    CREATE TABLE filmler (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        ad NVARCHAR(255) NOT NULL
+    CREATE TABLE IF NOT EXISTS filmler (
+        id SERIAL PRIMARY KEY,
+        ad VARCHAR(255) NOT NULL
     )
     """,
     """
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='hatirlatmalar')
-    CREATE TABLE hatirlatmalar (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        metin NVARCHAR(500) NOT NULL,
-        tarih_saat DATETIME NOT NULL
+    CREATE TABLE IF NOT EXISTS hatirlatmalar (
+        id SERIAL PRIMARY KEY,
+        metin VARCHAR(500) NOT NULL,
+        tarih_saat TIMESTAMP NOT NULL
     )
     """,
     """
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='gunluk')
-    CREATE TABLE gunluk (
-        id INT IDENTITY(1,1) PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS gunluk (
+        id SERIAL PRIMARY KEY,
         tarih DATE NOT NULL,
-        metin NVARCHAR(MAX) NOT NULL
+        metin TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS sohbet_gecmisi (
+        id SERIAL PRIMARY KEY,
+        kimden VARCHAR(50) NOT NULL,
+        mesaj TEXT NOT NULL,
+        zaman TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """
 ]
@@ -51,5 +54,5 @@ for sql in tablolar:
     cursor.execute(sql)
     conn.commit()
 
-print("✅ Tüm tablolar başarıyla oluşturuldu!")
+print("✅ Tüm PostgreSQL tabloları başarıyla oluşturuldu!")
 conn.close()
